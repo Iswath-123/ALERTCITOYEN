@@ -51,13 +51,44 @@
       </div>
     </div>
 
+    <div class="ob-loginside">
+      <button type="button" class="ob-back-btn" id="obLoginBackBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        Retour
+      </button>
+      <div class="ob-form-head">
+        <span class="ob-eyebrow"><i></i>Déjà inscrit ?</span>
+        <h2>Se connecter</h2>
+        <p>Entrez le numéro de téléphone utilisé lors de votre inscription.</p>
+      </div>
+
+      <form id="loginForm">
+        <div class="ob-f">
+          <label for="loginTel">Numéro de téléphone</label>
+          <div class="ob-input-wrap">
+            <span class="ob-tel-prefix">+241</span>
+            <input class="ob-tel-input" id="loginTel" type="tel" placeholder="077 00 00 00" required>
+          </div>
+        </div>
+
+        <p class="ob-error" id="loginError"></p>
+
+        <button type="submit" class="ob-submit-btn" id="loginSubmitBtn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+          Se connecter
+        </button>
+      </form>
+
+      <button type="button" class="ob-register-link" id="obGoRegisterBtn">Pas encore de compte ? <b>Inscrivez-vous</b></button>
+    </div>
+
     <div class="ob-formside">
       <button type="button" class="ob-back-btn" id="obBackBtn">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
         Retour
       </button>
       <div class="ob-form-head">
-        <span class="ob-eyebrow"><i></i>Étape 2 sur 2</span>
+        <span class="ob-eyebrow"><i></i>Inscription</span>
         <h2>Créer mon compte</h2>
         <p>Deux minutes suffisent. Vos informations restent confidentielles et ne servent qu'en cas d'alerte.</p>
       </div>

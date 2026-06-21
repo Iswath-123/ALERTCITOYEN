@@ -58,6 +58,27 @@ router.post('/inscription-citoyen', (req, res) => {
   res.status(201).json(compte);
 });
 
+// Connexion citoyenne — pas de mot de passe (cf. inscription-citoyen) : la
+// reconnaissance se fait uniquement par numéro de téléphone, pour les
+// citoyens qui ont déjà un compte (autre appareil, stockage local effacé...).
+router.post('/connexion-citoyen', (req, res) => {
+  const { telephone } = req.body;
+
+  if (!telephone) {
+    return res.status(400).json({ erreur: 'Le numéro de téléphone est requis' });
+  }
+
+  const compte = db
+    .prepare(`SELECT ${CHAMPS_PUBLICS} FROM comptes WHERE role = 'citoyen' AND telephone = ?`)
+    .get(telephone);
+
+  if (!compte) {
+    return res.status(404).json({ erreur: 'Aucun compte citoyen trouvé avec ce numéro.' });
+  }
+
+  res.json(compte);
+});
+
 router.post('/', (req, res) => {
   const { nom, prenom, email, mot_de_passe, role, type_entite, telephone } = req.body;
 

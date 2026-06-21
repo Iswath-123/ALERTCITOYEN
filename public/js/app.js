@@ -97,14 +97,61 @@
     }
     onboard.style.display = 'flex';
 
+    // Normalise un numéro saisi (espaces, points, tirets...) en +241XXXXXXXXX,
+    // pour que la connexion (recherche par téléphone) retrouve de façon
+    // fiable un compte créé avec une saisie différemment formatée.
+    function normaliserTelephone(valeur) {
+      const chiffres = (valeur || '').replace(/\D/g, '');
+      return chiffres ? `+241${chiffres}` : '';
+    }
+
     const obWrap = onboard.querySelector('.ob-wrap');
-    document.getElementById('obNextBtn').addEventListener('click', () => {
-      obWrap.classList.add('step-form');
+    function allerA(etape) {
+      obWrap.classList.remove('step-login', 'step-form');
+      if (etape) obWrap.classList.add(etape);
       onboard.scrollTop = 0;
-    });
-    document.getElementById('obBackBtn').addEventListener('click', () => {
-      obWrap.classList.remove('step-form');
-      onboard.scrollTop = 0;
+    }
+    document.getElementById('obNextBtn').addEventListener('click', () => allerA('step-login'));
+    document.getElementById('obLoginBackBtn').addEventListener('click', () => allerA(null));
+    document.getElementById('obGoRegisterBtn').addEventListener('click', () => allerA('step-form'));
+    document.getElementById('obBackBtn').addEventListener('click', () => allerA('step-login'));
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errorEl = document.getElementById('loginError');
+      errorEl.classList.remove('show');
+      const submitBtn = document.getElementById('loginSubmitBtn');
+      const submitLabel = submitBtn.innerHTML;
+
+      const telephone = normaliserTelephone(document.getElementById('loginTel').value);
+      if (!telephone) {
+        errorEl.textContent = 'Merci de saisir votre numéro de téléphone.';
+        errorEl.classList.add('show');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = 'Connexion...';
+
+      try {
+        const res = await fetch(`${API}/comptes/connexion-citoyen`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ telephone }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.erreur || 'Connexion impossible');
+
+        setCompte(data);
+        onboard.style.display = 'none';
+        initApp();
+      } catch (err) {
+        errorEl.textContent = err.message || 'Connexion au serveur impossible.';
+        errorEl.classList.add('show');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = submitLabel;
+      }
     });
 
     const sameWa = document.getElementById('sameWa');
@@ -132,8 +179,8 @@
 
       const nom = document.getElementById('nom').value.trim();
       const prenom = document.getElementById('prenom').value.trim();
-      const telephone = tel.value.trim() ? `+241${tel.value.trim()}` : '';
-      const whatsapp = sameWa.checked ? telephone : (wa.value.trim() ? `+241${wa.value.trim()}` : '');
+      const telephone = normaliserTelephone(tel.value);
+      const whatsapp = sameWa.checked ? telephone : normaliserTelephone(wa.value);
       const quartierValeur = quartier.value === 'Autre' ? quartierAutre.value.trim() : quartier.value;
 
       if (!nom || !telephone) {
