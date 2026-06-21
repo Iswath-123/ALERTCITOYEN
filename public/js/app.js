@@ -516,6 +516,10 @@
     const sheetVideoInput = document.getElementById('sheetVideoInput');
     const sheetPhotoLabel = document.getElementById('sheetPhotoLabel');
     const sheetVideoLabel = document.getElementById('sheetVideoLabel');
+    // Les <input> sont des frères des <label for="..."> (association via
+    // l'attribut for), pas des enfants : .closest('label') ne les trouve pas.
+    const sheetPhotoLabelEl = document.querySelector('label[for="sheetPhotoInput"]');
+    const sheetVideoLabelEl = document.querySelector('label[for="sheetVideoInput"]');
     let currentType = null;
 
     function resetMedia() {
@@ -523,18 +527,18 @@
       sheetVideoInput.value = '';
       sheetPhotoLabel.textContent = 'Photo';
       sheetVideoLabel.textContent = 'Vidéo';
-      sheetPhotoInput.closest('label').classList.remove('has-file');
-      sheetVideoInput.closest('label').classList.remove('has-file');
+      sheetPhotoLabelEl.classList.remove('has-file');
+      sheetVideoLabelEl.classList.remove('has-file');
     }
     sheetPhotoInput.addEventListener('change', () => {
       const has = sheetPhotoInput.files.length > 0;
       sheetPhotoLabel.textContent = has ? 'Photo ajoutée ✓' : 'Photo';
-      sheetPhotoInput.closest('label').classList.toggle('has-file', has);
+      sheetPhotoLabelEl.classList.toggle('has-file', has);
     });
     sheetVideoInput.addEventListener('change', () => {
       const has = sheetVideoInput.files.length > 0;
       sheetVideoLabel.textContent = has ? 'Vidéo ajoutée ✓' : 'Vidéo';
-      sheetVideoInput.closest('label').classList.toggle('has-file', has);
+      sheetVideoLabelEl.classList.toggle('has-file', has);
     });
 
     document.querySelectorAll('.cat').forEach((el) => {
