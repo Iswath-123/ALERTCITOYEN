@@ -2,8 +2,6 @@
   /* ===== Config ===== */
   const API = '/api';
   const COMPTE_KEY = 'alertcitoyen_compte_citoyen';
-  const SOS_DURATION = 3000;
-  const LIBREVILLE = [0.3924, 9.4536];
   const GPS_OPTIONS = { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 };
 
   // La maquette affiche des libellés français capitalisés (data-cat, options du
@@ -24,7 +22,6 @@
 
   let currentUser = null;
   let lastPosition = null;
-  let citizenMap = null;
 
   /* ===== Helpers ===== */
   function getCompte() {
@@ -174,7 +171,6 @@
   function initApp() {
     initSocket();
     initGeolocation();
-    initSOS();
     initVoice();
     initCategories();
     initNav();
@@ -185,8 +181,6 @@
   }
 
   /* ----- Socket.IO (temps réel) ----- */
-  let activeSosAlerteId = null;
-
   function initSocket() {
     if (typeof io === 'undefined') return;
     const socket = io();
@@ -197,7 +191,6 @@
       if (!currentUser || alerte.user_id !== currentUser.id) return;
       loadRecentAlerts();
       document.getElementById('bellBtn').classList.add('has-ping');
-      if (alerte.id === activeSosAlerteId && alerte.statut === 'resolue') stopSosWatch();
       showToast(`${typeLabel(alerte.type)} #${alerte.id.slice(0, 8).toUpperCase()} — ${statutLabel(alerte.statut)}`);
     });
   }
@@ -361,130 +354,6 @@
       }
       throw err;
     }
-  }
-
-  /* ----- SOS (appui maintenu 3s) + suivi temps réel ----- */
-  let activeSosWatchId = null;
-
-  function startSosWatch(alerteId) {
-    stopSosWatch();
-    if (!navigator.geolocation) return;
-    activeSosAlerteId = alerteId;
-    let lastSent = 0;
-
-    activeSosWatchId = navigator.geolocation.watchPosition(
-      (pos) => {
-        const now = Date.now();
-        if (now - lastSent < 5000) return;
-        lastSent = now;
-        lastPosition = capturePosition(pos);
-        renderGps();
-
-        fetch(`${API}/alertes/${alerteId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            latitude: lastPosition.latitude,
-            longitude: lastPosition.longitude,
-            accuracy: lastPosition.accuracy,
-            altitude: lastPosition.altitude,
-            position_timestamp: new Date(lastPosition.timestamp).toISOString(),
-          }),
-        }).catch(() => {});
-      },
-      () => {},
-      GPS_OPTIONS
-    );
-  }
-
-  function stopSosWatch() {
-    if (activeSosWatchId != null && navigator.geolocation) navigator.geolocation.clearWatch(activeSosWatchId);
-    activeSosWatchId = null;
-    activeSosAlerteId = null;
-  }
-
-  function initSOS() {
-    const sosBtn = document.getElementById('sosBtn');
-    const ring = document.getElementById('ringProgress');
-    const overlay = document.getElementById('sosOverlay');
-    const overlayTitle = document.getElementById('overlayTitle');
-    const overlaySub = document.getElementById('overlaySub');
-    const overlayCode = document.getElementById('overlayCode');
-
-    const CIRC = 521;
-    let holdStart = null, raf = null, holding = false, triggered = false;
-
-    function setRing(p) { ring.style.strokeDashoffset = String(CIRC - CIRC * p); }
-
-    function startHold(e) {
-      e.preventDefault();
-      if (holding) return;
-      if (!lastPosition) { showToast('Position GPS en cours de détection — réessaie dans un instant'); return; }
-      triggered = false;
-      holding = true;
-      holdStart = performance.now();
-      step();
-    }
-    function step() {
-      if (!holding) return;
-      const elapsed = performance.now() - holdStart;
-      const p = Math.min(elapsed / SOS_DURATION, 1);
-      setRing(p);
-      if (p >= 1) { holding = false; trigger(); return; }
-      raf = requestAnimationFrame(step);
-    }
-    function cancelHold() {
-      if (!holding) return;
-      holding = false;
-      cancelAnimationFrame(raf);
-      if (triggered) return;
-      const start = CIRC - parseFloat(ring.style.strokeDashoffset || String(CIRC));
-      const t0 = performance.now();
-      (function unwind() {
-        const dt = performance.now() - t0;
-        const ratio = Math.min(dt / 220, 1);
-        setRing((start / CIRC) * (1 - ratio));
-        if (ratio < 1) requestAnimationFrame(unwind);
-      })();
-    }
-
-    async function trigger() {
-      triggered = true;
-      if (navigator.vibrate) navigator.vibrate([60, 40, 60]);
-      overlay.classList.remove('done');
-      overlay.classList.add('open');
-      overlayTitle.textContent = 'Transmission de votre position…';
-      overlaySub.textContent = "Ne quittez pas l'application.";
-
-      try {
-        const alerte = await envoyerAlerte('sos', 'Alerte SOS');
-        overlay.classList.add('done');
-        if (alerte.horsLigne) {
-          overlayTitle.textContent = 'Alerte enregistrée (hors connexion)';
-          overlaySub.textContent = "Aucun réseau détecté. Elle sera transmise automatiquement dès que la connexion revient.";
-          overlayCode.textContent = 'En attente d\'envoi';
-        } else {
-          overlayTitle.textContent = 'Alerte transmise';
-          overlaySub.textContent = 'Les secours ont été notifiés. Votre position est suivie en temps réel.';
-          overlayCode.textContent = `Suivi #${alerte.id.slice(0, 8).toUpperCase()}`;
-          startSosWatch(alerte.id);
-        }
-      } catch (err) {
-        overlay.classList.add('done');
-        overlayTitle.textContent = "Échec de l'envoi";
-        overlaySub.textContent = err.message || 'Vérifie ta connexion et réessaie.';
-      } finally {
-        setTimeout(() => setRing(0), 50);
-      }
-    }
-
-    sosBtn.addEventListener('pointerdown', startHold);
-    sosBtn.addEventListener('pointerup', cancelHold);
-    sosBtn.addEventListener('pointerleave', cancelHold);
-    sosBtn.addEventListener('pointercancel', cancelHold);
-
-    document.getElementById('overlayClose').addEventListener('click', () => overlay.classList.remove('open'));
-    document.getElementById('overlayCancel').addEventListener('click', () => overlay.classList.remove('open'));
   }
 
   /* ----- Catégories (feuille glissante) ----- */
@@ -765,7 +634,6 @@
     const views = {
       accueil: document.getElementById('viewAccueil'),
       alertes: document.getElementById('viewAlertes'),
-      carte: document.getElementById('viewCarte'),
       profil: document.getElementById('viewProfil'),
     };
     const navItems = document.querySelectorAll('.navitem');
@@ -773,7 +641,6 @@
     function showView(name) {
       Object.entries(views).forEach(([key, el]) => el.classList.toggle('hidden', key !== name));
       navItems.forEach((btn) => btn.classList.toggle('active', btn.dataset.view === name));
-      if (name === 'carte') initCitizenMap();
       if (name === 'profil') renderProfile();
     }
 
@@ -783,40 +650,6 @@
       document.getElementById('bellBtn').classList.remove('has-ping');
       showView('alertes');
     });
-  }
-
-  /* ----- Carte citoyenne (lecture seule) ----- */
-  function colorForPriorite(priorite) {
-    if (priorite === 'haute') return '#C8102E';
-    if (priorite === 'basse' || priorite === 'faible') return '#009639';
-    return '#FCD116';
-  }
-
-  function initCitizenMap() {
-    if (citizenMap) { citizenMap.invalidateSize(); loadCitizenMapMarkers(); return; }
-    const center = lastPosition ? [lastPosition.latitude, lastPosition.longitude] : LIBREVILLE;
-    citizenMap = L.map('citizenMap').setView(center, 13);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-      maxZoom: 19,
-    }).addTo(citizenMap);
-    loadCitizenMapMarkers();
-  }
-
-  async function loadCitizenMapMarkers() {
-    try {
-      const res = await fetch(`${API}/alertes`);
-      const alertes = await res.json();
-      alertes.forEach((a) => {
-        if (a.latitude == null || a.longitude == null) return;
-        const icon = L.divIcon({
-          className: '',
-          html: `<span style="display:block;width:14px;height:14px;border-radius:50%;border:2px solid white;box-shadow:0 0 6px rgba(11,31,58,.4);background:${colorForPriorite(a.priorite)}"></span>`,
-          iconSize: [14, 14],
-        });
-        L.marker([a.latitude, a.longitude], { icon }).addTo(citizenMap).bindPopup(`<strong>${typeLabel(a.type)}</strong>`);
-      });
-    } catch { /* silencieux : la carte reste affichée sans marqueurs */ }
   }
 
   /* ----- Profil ----- */

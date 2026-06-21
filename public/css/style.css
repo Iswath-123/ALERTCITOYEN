@@ -815,29 +815,17 @@ body { display: flex; flex-direction: column; min-height: 100dvh; overscroll-beh
 .view { display: block; }
 .view.hidden { display: none; }
 
-/* SOS dial */
-.sos-zone { display: flex; flex-direction: column; align-items: center; padding: 8px 0 4px; }
-.dial { position: relative; width: 178px; height: 178px; display: flex; align-items: center; justify-content: center; }
-.pulse { position: absolute; inset: 0; border-radius: 50%; border: 1.5px solid rgba(200, 16, 46, .35); animation: pulse 2.6s ease-out infinite; }
-.pulse.p2 { animation-delay: .9s; } .pulse.p3 { animation-delay: 1.8s; }
-@keyframes pulse { 0% { transform: scale(.74); opacity: .55; } 100% { transform: scale(1.28); opacity: 0; } }
-.dial svg.ring { position: absolute; inset: 0; transform: rotate(-90deg); }
-.dial svg.ring circle { fill: none; stroke-width: 3.5; }
-.dial svg.ring .track { stroke: rgba(11, 31, 58, .08); }
-.dial svg.ring .progress { stroke: var(--red); stroke-linecap: round; transition: stroke-dashoffset .05s linear; }
-.sos-core {
-  width: 138px; height: 138px; border-radius: 50%;
-  background: radial-gradient(circle at 32% 28%, #e23753, var(--red) 65%);
-  display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff;
-  box-shadow: 0 14px 30px rgba(200, 16, 46, .38), inset 0 2px 3px rgba(255, 255, 255, .25);
-  cursor: pointer; user-select: none; -webkit-user-select: none; touch-action: none;
-  transition: transform .15s ease; border: none;
+/* Icônes des catégories d'incident — anneaux pulsés (même esprit que
+   l'ancien bouton SOS), teintés à la couleur de chaque catégorie via
+   currentColor (voir l'attribut style="color:..." posé sur chaque .ci). */
+.cat .ci { position: relative; }
+.cat .ci::before, .cat .ci::after {
+  content: ''; position: absolute; inset: 0; border-radius: 11px;
+  border: 1.5px solid currentColor; opacity: .45; pointer-events: none;
+  animation: cat-pulse 2.4s ease-out infinite;
 }
-.sos-core:active { transform: scale(.97); }
-.sos-core .label { font-family: var(--font-display); font-weight: 800; font-size: 21px; letter-spacing: .04em; }
-.sos-core .hint { font-size: 9px; opacity: .85; margin-top: 2px; font-weight: 500; }
-.sos-caption { margin-top: 13px; font-size: 11.5px; color: var(--t2); text-align: center; max-width: 240px; line-height: 1.5; }
-.sos-caption b { color: var(--t1); }
+.cat .ci::after { animation-delay: 1.2s; }
+@keyframes cat-pulse { 0% { transform: scale(.85); opacity: .5; } 100% { transform: scale(1.55); opacity: 0; } }
 
 /* Voice */
 .voice-btn {
@@ -953,27 +941,6 @@ body { display: flex; flex-direction: column; min-height: 100dvh; overscroll-beh
 .sheet .send-btn { width: 100%; margin-top: 15px; }
 .sheet .cancel { width: 100%; margin-top: 8px; border: none; background: none; color: var(--t2); font-size: 12px; padding: 6px 0; cursor: pointer; font-weight: 600; }
 
-/* SOS overlay */
-.sos-overlay {
-  position: fixed; inset: 0; background: linear-gradient(170deg, #a30f25, #7c0c1c 70%); z-index: 30;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff;
-  opacity: 0; pointer-events: none; transition: opacity .3s ease; text-align: center; padding: 0 30px;
-}
-.sos-overlay.open { opacity: 1; pointer-events: auto; }
-.sos-overlay .rings { position: relative; width: 120px; height: 120px; margin-bottom: 22px; }
-.sos-overlay .rings .r { position: absolute; inset: 0; border: 1.5px solid rgba(255, 255, 255, .4); border-radius: 50%; animation: opulse 1.8s ease-out infinite; }
-.sos-overlay .rings .r:nth-child(2) { animation-delay: .6s; } .sos-overlay .rings .r:nth-child(3) { animation-delay: 1.2s; }
-@keyframes opulse { 0% { transform: scale(.5); opacity: .9; } 100% { transform: scale(1.7); opacity: 0; } }
-.sos-overlay .rings .core { position: absolute; inset: 30px; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--red); }
-.sos-overlay h3 { font-family: var(--font-display); font-size: 16px; margin: 0 0 6px; }
-.sos-overlay p { font-size: 12px; opacity: .85; margin: 0; line-height: 1.5; }
-.sos-overlay .code { margin-top: 18px; font-family: var(--font-mono); font-size: 13px; background: rgba(255, 255, 255, .14); padding: 8px 16px; border-radius: 99px; letter-spacing: .03em; display: none; }
-.sos-overlay.done .code { display: inline-block; }
-.sos-overlay .closebtn { margin-top: 22px; border: 1px solid rgba(255, 255, 255, .5); background: none; color: #fff; padding: 9px 22px; border-radius: 99px; font-weight: 600; font-size: 12px; cursor: pointer; display: none; }
-.sos-overlay.done .closebtn { display: inline-block; }
-.sos-overlay .cancelbtn { margin-top: 16px; border: none; background: none; color: rgba(255, 255, 255, .75); font-size: 11.5px; text-decoration: underline; cursor: pointer; }
-.sos-overlay.done .cancelbtn { display: none; }
-
 .toast {
   position: fixed; left: 18px; right: 18px; top: max(18px, env(safe-area-inset-top)); z-index: 40; max-width: 440px; margin: 0 auto;
   background: var(--navy); color: #fff; border-radius: 13px; padding: 11px 14px; display: flex; align-items: center; gap: 10px;
@@ -1064,9 +1031,6 @@ body { display: flex; flex-direction: column; min-height: 100dvh; overscroll-beh
 .onboard .ob-submit-btn { margin-top: 6px; border: none; border-radius: 13px; padding: 13px 0; background: linear-gradient(135deg, var(--navy), #142C52); color: #fff; font-family: var(--font-display); font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 12px 26px rgba(11,31,58,.28); }
 .onboard .ob-submit-btn:disabled { opacity: .6; }
 .onboard .ob-foot-note { text-align: center; font-size: 10px; color: var(--t3); margin-top: 12px; }
-
-/* Carte citoyenne (lecture seule) */
-.citizen-map { width: 100%; height: 62vh; border-radius: 15px; overflow: hidden; border: 1px solid var(--line); }
 
 /* Profil citoyen */
 .profile-card { background: var(--card); border: 1px solid var(--line); border-radius: 15px; padding: 20px; text-align: center; box-shadow: var(--shadow-sm); margin-bottom: 14px; }
