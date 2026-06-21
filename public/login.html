@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AlertCitoyen — Connexion professionnelle</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body class="page-login">
+
+  <header class="app-header">
+    <div class="header-content">
+      <div class="logo-badge has-image"><img src="/images/logos/logo-alertcitoyen.png" alt="AlertCitoyen" /></div>
+      <div class="header-text">
+        <span class="app-title">AlertCitoyen</span>
+        <span class="app-subtitle">République Gabonaise</span>
+      </div>
+    </div>
+  </header>
+  <div class="tricolor-band"><span class="green"></span><span class="yellow"></span><span class="blue"></span></div>
+
+  <main class="login-main">
+    <div class="login-card">
+      <h2>Espace professionnel</h2>
+      <p class="login-subtitle">Dispatch national · Entités d'intervention · Ministère de l'Intérieur</p>
+
+      <div id="login-error" class="login-error hidden"></div>
+
+      <label for="login-email">Email</label>
+      <input id="login-email" type="email" placeholder="vous@alertcitoyen.ga" autocomplete="username" />
+
+      <label for="login-password">Mot de passe</label>
+      <input id="login-password" type="password" placeholder="••••••••" autocomplete="current-password" />
+
+      <button id="login-submit-btn" class="send-btn"><i class="fa-solid fa-right-to-bracket"></i> Se connecter</button>
+
+      <div class="login-demo-accounts">
+        <strong>Comptes de démonstration</strong><br>
+        admin@interieur.ga / admin123 (super_admin)<br>
+        dispatch@alertcitoyen.ga / dispatch123 (dispatch)<br>
+        police@alertcitoyen.ga / police123 (entité police)<br>
+        pompiers@alertcitoyen.ga / pompiers123 (entité pompiers)<br>
+        samu@alertcitoyen.ga / samu123 (entité SAMU)<br>
+        mairie@alertcitoyen.ga / mairie123 (entité mairie)
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/login.js"></script>
+</body>
+</html>

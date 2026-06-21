@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AlertCitoyen — République Gabonaise</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body class="page-citoyen">
+
+  <!-- ===================== Inscription citoyenne obligatoire ===================== -->
+  <div id="registration-gate" class="registration-gate hidden">
+    <header class="app-header">
+      <div class="header-content">
+        <div class="logo-badge has-image"><img src="/images/logos/logo-alertcitoyen.png" alt="AlertCitoyen" /></div>
+        <div class="header-text">
+          <span class="app-title">AlertCitoyen</span>
+          <span class="app-subtitle">République Gabonaise</span>
+        </div>
+      </div>
+    </header>
+    <div class="tricolor-band"><span class="green"></span><span class="yellow"></span><span class="blue"></span></div>
+
+    <div class="registration-card">
+      <div class="registration-intro">
+        <i class="fa-solid fa-id-card"></i>
+        <h2>Bienvenue sur AlertCitoyen</h2>
+        <p>Créez votre compte citoyen pour pouvoir signaler un incident et être recontacté en cas de besoin.</p>
+      </div>
+
+      <label for="reg-nom">Nom</label>
+      <input id="reg-nom" type="text" placeholder="Votre nom" />
+
+      <label for="reg-prenom">Prénom</label>
+      <input id="reg-prenom" type="text" placeholder="Votre prénom" />
+
+      <label for="reg-telephone">Numéro de téléphone</label>
+      <input id="reg-telephone" type="tel" placeholder="+241 XX XXX XXX" />
+
+      <label for="reg-whatsapp">Numéro WhatsApp</label>
+      <input id="reg-whatsapp" type="tel" placeholder="+241 XX XXX XXX" />
+      <div class="registration-checkbox">
+        <input id="reg-whatsapp-identique" type="checkbox" checked />
+        <label for="reg-whatsapp-identique" style="margin: 0;">Identique au numéro de téléphone</label>
+      </div>
+
+      <label for="reg-quartier">Quartier de résidence</label>
+      <input id="reg-quartier" type="text" placeholder="Ex : Glass, Akanda, Nzeng-Ayong..." />
+
+      <label>Photo (optionnel)</label>
+      <div class="photo-upload">
+        <div class="photo-upload-preview" id="reg-photo-preview"><i class="fa-solid fa-user"></i></div>
+        <button type="button" class="photo-upload-btn" id="reg-photo-btn">Choisir une photo</button>
+        <input id="reg-photo-input" type="file" accept="image/*" class="hidden" />
+      </div>
+
+      <div id="reg-error" class="login-error hidden"></div>
+
+      <button id="reg-submit-btn" class="send-btn"><i class="fa-solid fa-user-check"></i> Créer mon compte</button>
+    </div>
+  </div>
+
+  <header class="app-header">
+    <div class="header-content">
+      <div class="logo-badge has-image"><img src="/images/logos/logo-alertcitoyen.png" alt="AlertCitoyen" /></div>
+      <div class="header-text">
+        <span class="app-title">AlertCitoyen</span>
+        <span class="app-subtitle">République Gabonaise</span>
+      </div>
+    </div>
+  </header>
+  <div class="tricolor-band"><span class="green"></span><span class="yellow"></span><span class="blue"></span></div>
+
+  <div class="gps-bar" id="gps-bar">
+    <i class="fa-solid fa-location-dot"></i>
+    <span id="gps-bar-text">Localisation en cours...</span>
+    <button class="gps-bar-refresh" id="gps-bar-refresh" aria-label="Actualiser la position"><i class="fa-solid fa-rotate"></i></button>
+  </div>
+
+  <main class="citoyen-main">
+
+    <!-- ===================== Vue Accueil ===================== -->
+    <section id="view-accueil" class="view">
+
+      <section id="sos-view" class="sos-section">
+        <div class="sos-wrapper">
+          <svg class="sos-progress" viewBox="0 0 170 170">
+            <circle class="sos-progress-bg" cx="85" cy="85" r="79"></circle>
+            <circle class="sos-progress-fill" id="sos-progress-fill" cx="85" cy="85" r="79"></circle>
+          </svg>
+          <button id="sos-btn" class="sos-button" aria-label="Bouton SOS — maintenir 3 secondes">
+            <span class="sos-icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+            <span class="sos-label">SOS</span>
+          </button>
+        </div>
+        <p class="sos-hint">Maintenez appuyé 3 secondes pour envoyer une alerte d'urgence</p>
+      </section>
+
+      <section class="voice-section">
+        <button id="voice-main-btn" class="voice-main-btn">
+          <i class="fa-solid fa-microphone"></i> Signaler à la voix
+        </button>
+      </section>
+
+      <section id="categories-view" class="categories-section">
+        <h2>Signaler un incident</h2>
+        <div class="categories-grid" id="categories-grid">
+          <button class="category-btn" data-type="agression" data-label="Agression">
+            <span class="cat-icon"><i class="fa-solid fa-hand-fist"></i></span><span>Agression</span>
+          </button>
+          <button class="category-btn" data-type="accident" data-label="Accident">
+            <span class="cat-icon"><i class="fa-solid fa-car-burst"></i></span><span>Accident</span>
+          </button>
+          <button class="category-btn" data-type="incendie" data-label="Incendie">
+            <span class="cat-icon"><i class="fa-solid fa-fire"></i></span><span>Incendie</span>
+          </button>
+          <button class="category-btn" data-type="inondation" data-label="Inondation">
+            <span class="cat-icon"><i class="fa-solid fa-water"></i></span><span>Inondation</span>
+          </button>
+          <button class="category-btn" data-type="secours_medical" data-label="Secours médical">
+            <span class="cat-icon"><i class="fa-solid fa-suitcase-medical"></i></span><span>Secours médical</span>
+          </button>
+          <button class="category-btn" data-type="autre" data-label="Autre">
+            <span class="cat-icon"><i class="fa-solid fa-circle-question"></i></span><span>Autre</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Formulaire catégorie -->
+      <section id="form-section" class="panel hidden">
+        <button id="form-back" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Retour</button>
+        <h2 id="form-title">Signaler un incident</h2>
+
+        <label for="description">Description (optionnel)</label>
+        <textarea id="description" rows="4" placeholder="Décrivez la situation en quelques mots..."></textarea>
+
+        <button id="gps-btn" class="gps-btn"><i class="fa-solid fa-location-crosshairs"></i> Utiliser ma position GPS</button>
+        <div id="position-preview" class="position-preview hidden"></div>
+
+        <button id="send-btn" class="send-btn"><i class="fa-solid fa-paper-plane"></i> Envoyer l'alerte</button>
+      </section>
+
+      <!-- Panneau vocal -->
+      <section id="voice-panel" class="panel hidden">
+        <button id="voice-back" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Retour</button>
+        <h2>Signaler à la voix</h2>
+
+        <div class="mic-indicator" id="mic-indicator"><i class="fa-solid fa-microphone"></i></div>
+        <p class="voice-status-text" id="voice-status-text">Appuyez sur le micro et décrivez la situation</p>
+
+        <button id="voice-mic-btn" class="voice-mic-btn"><i class="fa-solid fa-microphone"></i> Démarrer l'enregistrement</button>
+
+        <div class="voice-transcript" id="voice-transcript"><span class="placeholder">La transcription apparaîtra ici...</span></div>
+
+        <div id="voice-type-detected" class="voice-type-detected hidden"></div>
+
+        <button id="voice-send-btn" class="send-btn hidden"><i class="fa-solid fa-paper-plane"></i> Envoyer l'alerte</button>
+      </section>
+
+      <!-- Confirmation -->
+      <section id="confirmation-section" class="hidden">
+        <div class="confirmation-card">
+          <i class="fa-solid fa-circle-check"></i>
+          <h2>Alerte envoyée</h2>
+          <p class="confirmation-message">Les secours ont été notifiés. Restez en sécurité, une équipe traite votre signalement.</p>
+          <p>Numéro de suivi</p>
+          <div class="tracking-number" id="tracking-number">#XXXXXXXX</div>
+          <div>
+            <button id="new-alert-btn" class="secondary-btn">Nouvelle alerte</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="recent-section">
+        <h2>Mes alertes récentes</h2>
+        <ul id="recent-list-home" class="recent-list">
+          <li class="empty-state">Aucune alerte envoyée pour le moment.</li>
+        </ul>
+      </section>
+
+    </section>
+
+    <!-- ===================== Vue Mes alertes ===================== -->
+    <section id="view-alertes" class="view hidden">
+      <h2>Mes alertes</h2>
+      <ul id="recent-list-full" class="recent-list">
+        <li class="empty-state">Aucune alerte envoyée pour le moment.</li>
+      </ul>
+    </section>
+
+    <!-- ===================== Vue Carte ===================== -->
+    <section id="view-carte" class="view hidden">
+      <h2>Carte des signalements</h2>
+      <div id="citizen-map" class="citizen-map"></div>
+    </section>
+
+    <!-- ===================== Vue Profil ===================== -->
+    <section id="view-profil" class="view hidden">
+      <h2>Mon profil</h2>
+
+      <div id="profile-card" class="profile-card">
+        <div class="profile-avatar" id="profile-avatar"><i class="fa-solid fa-user"></i></div>
+        <h3 id="profile-nom">—</h3>
+        <p id="profile-quartier">—</p>
+        <p id="profile-telephone">—</p>
+        <p id="profile-whatsapp">—</p>
+        <button id="profile-reset-btn" class="secondary-btn">Réinitialiser mon inscription</button>
+      </div>
+
+      <section class="panel">
+        <h2>Mon historique</h2>
+        <div class="alerteur-stats">
+          <div class="stat-card">
+            <span class="stat-value" id="profile-total-alertes">0</span>
+            <span class="stat-label">Alertes émises</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-value" id="profile-alertes-resolues">0</span>
+            <span class="stat-label">Résolues</span>
+          </div>
+        </div>
+        <div class="alerteur-fiabilite" id="profile-fiabilite"><i class="fa-solid fa-gauge-high"></i> —</div>
+      </section>
+    </section>
+
+  </main>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-view="accueil"><i class="fa-solid fa-house"></i><span>Accueil</span></button>
+    <button class="nav-btn" data-view="alertes"><i class="fa-solid fa-list"></i><span>Mes alertes</span></button>
+    <button class="nav-btn" data-view="carte"><i class="fa-solid fa-map"></i><span>Carte</span></button>
+    <button class="nav-btn" data-view="profil"><i class="fa-solid fa-user"></i><span>Profil</span></button>
+  </nav>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="/js/main.js"></script>
+</body>
+</html>

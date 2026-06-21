@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AlertCitoyen — Administration</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body class="page-dispatch">
+
+  <header class="app-header dispatch-header">
+    <div class="header-content">
+      <div class="logo-badge has-image"><img src="/images/logos/logo-ministere-interieur.jpg" alt="Ministère de l'Intérieur" /></div>
+      <div class="header-text">
+        <span class="app-title">AlertCitoyen — Administration</span>
+        <span class="app-subtitle">Ministère de l'Intérieur · République Gabonaise</span>
+      </div>
+    </div>
+    <div class="header-status">
+      <span id="connection-status" class="status-dot"></span>
+      <span id="admin-nom"></span>
+      <button class="filter-btn" id="logout-btn" style="margin-left: 0.75rem;"><i class="fa-solid fa-right-from-bracket"></i> Déconnexion</button>
+    </div>
+  </header>
+  <div class="tricolor-band"><span class="green"></span><span class="yellow"></span><span class="blue"></span></div>
+
+  <nav class="admin-tabs">
+    <button class="admin-tab-btn active" data-tab="direct"><i class="fa-solid fa-map-location-dot"></i> Alertes en direct</button>
+    <button class="admin-tab-btn" data-tab="journal"><i class="fa-solid fa-book"></i> Journal</button>
+    <button class="admin-tab-btn" data-tab="rapports"><i class="fa-solid fa-file-pdf"></i> Rapports</button>
+    <button class="admin-tab-btn" data-tab="stats"><i class="fa-solid fa-chart-line"></i> Statistiques nationales</button>
+    <button class="admin-tab-btn" data-tab="comptes"><i class="fa-solid fa-users"></i> Gestion des comptes</button>
+    <button class="admin-tab-btn" data-tab="entites"><i class="fa-solid fa-building-shield"></i> Supervision entités</button>
+    <button class="admin-tab-btn" data-tab="unites"><i class="fa-solid fa-map-pin"></i> Unités Police</button>
+  </nav>
+
+  <div class="tabs-content">
+
+    <!-- ===================== Alertes en direct (national) ===================== -->
+    <section id="tab-direct" class="tab-panel full-bleed">
+      <div class="stats-bar">
+        <div class="stat-card">
+          <span class="stat-value" id="stat-jour">0</span>
+          <span class="stat-label">Alertes du jour</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value" id="stat-en-cours">0</span>
+          <span class="stat-label">En cours</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value" id="stat-resolues">0</span>
+          <span class="stat-label">Résolues</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value" id="stat-temps-reponse">—</span>
+          <span class="stat-label">Temps de réponse moyen</span>
+        </div>
+      </div>
+
+      <div class="dispatch-layout">
+        <div id="map" class="dispatch-map"></div>
+
+        <aside class="alertes-panel">
+          <div class="panel-header">
+            <h2>Toutes les alertes — vue nationale</h2>
+            <div class="filter-buttons" id="filter-buttons">
+              <button class="filter-btn active" data-filter="all">Toutes</button>
+              <button class="filter-btn" data-filter="en_attente">En attente</button>
+              <button class="filter-btn" data-filter="en_cours">En cours</button>
+              <button class="filter-btn" data-filter="en_intervention">Intervention</button>
+              <button class="filter-btn" data-filter="resolue">Résolues</button>
+            </div>
+          </div>
+          <ul id="alertes-list" class="alertes-list">
+            <li class="empty-state">Chargement des alertes...</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ===================== Journal (national) ===================== -->
+    <section id="tab-journal" class="tab-panel padded hidden">
+      <h2>Journal des alertes et des connexions</h2>
+
+      <div class="journal-tabs">
+        <button class="filter-btn active" data-journal-tab="alertes">Alertes</button>
+        <button class="filter-btn" data-journal-tab="connexions">Connexions</button>
+      </div>
+
+      <div id="journal-alertes-panel">
+        <div class="journal-filters">
+          <label>Date début <input id="journal-date-debut" type="date" /></label>
+          <label>Date fin <input id="journal-date-fin" type="date" /></label>
+          <label>Type
+            <select id="journal-type">
+              <option value="">Tous</option>
+              <option value="sos">SOS Urgence</option>
+              <option value="agression">Agression</option>
+              <option value="vol">Vol</option>
+              <option value="trouble">Trouble</option>
+              <option value="accident">Accident</option>
+              <option value="incendie">Incendie</option>
+              <option value="inondation">Inondation</option>
+              <option value="secours_medical">Secours médical</option>
+              <option value="malaise">Malaise</option>
+              <option value="autre">Autre</option>
+            </select>
+          </label>
+          <label>Quartier <input id="journal-quartier" type="text" placeholder="Ex : Glass" /></label>
+          <button class="admin-btn-primary" id="journal-filtrer-btn"><i class="fa-solid fa-filter"></i> Filtrer</button>
+        </div>
+
+        <div class="journal-table-wrapper">
+          <table class="journal-table">
+            <thead>
+              <tr>
+                <th>Horodatage</th>
+                <th>Type</th>
+                <th>Priorité</th>
+                <th>Alerteur</th>
+                <th>Contact</th>
+                <th>Quartier</th>
+                <th>Entité affectée</th>
+                <th>Agent</th>
+                <th>Statut</th>
+              </tr>
+            </thead>
+            <tbody id="journal-alertes-body">
+              <tr><td colspan="9">Chargement...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="journal-connexions-panel" class="hidden">
+        <div class="journal-table-wrapper">
+          <table class="journal-table">
+            <thead>
+              <tr>
+                <th>Horodatage</th>
+                <th>Nom</th>
+                <th>Rôle</th>
+                <th>Entité</th>
+              </tr>
+            </thead>
+            <tbody id="journal-connexions-body">
+              <tr><td colspan="4">Chargement...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== Rapports (à venir) ===================== -->
+    <section id="tab-rapports" class="tab-panel padded hidden">
+      <h2>Rapports d'activité</h2>
+      <div class="panel" style="max-width: 560px;">
+        <p style="color: var(--color-text-secondary); font-size: 0.85rem; margin-top: 0;">
+          Génère un rapport synthétique avec en-tête officiel : alertes par type, taux de résolution, temps de réponse moyen et zones à risque sur la période choisie.
+        </p>
+        <div class="rapport-options" id="rapport-periode-buttons">
+          <button class="filter-btn active" data-periode="jour">Aujourd'hui</button>
+          <button class="filter-btn" data-periode="semaine">7 derniers jours</button>
+          <button class="filter-btn" data-periode="mois">30 derniers jours</button>
+        </div>
+        <div class="rapport-options" id="rapport-format-buttons">
+          <button class="filter-btn active" data-format="pdf"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+          <button class="filter-btn" data-format="docx"><i class="fa-solid fa-file-word"></i> Word</button>
+        </div>
+        <button class="send-btn" id="rapport-generer-btn"><i class="fa-solid fa-download"></i> Générer et télécharger</button>
+      </div>
+    </section>
+
+    <!-- ===================== Statistiques nationales ===================== -->
+    <section id="tab-stats" class="tab-panel padded hidden">
+      <h2>Statistiques nationales</h2>
+      <div class="admin-stats-grid">
+        <div class="stat-card"><span class="stat-value" id="nat-total">0</span><span class="stat-label">Alertes totales</span></div>
+        <div class="stat-card"><span class="stat-value" id="nat-jour">0</span><span class="stat-label">Alertes du jour</span></div>
+        <div class="stat-card"><span class="stat-value" id="nat-attente">0</span><span class="stat-label">En attente</span></div>
+        <div class="stat-card"><span class="stat-value" id="nat-cours">0</span><span class="stat-label">En cours</span></div>
+        <div class="stat-card"><span class="stat-value" id="nat-resolues">0</span><span class="stat-label">Résolues</span></div>
+        <div class="stat-card"><span class="stat-value" id="nat-haute">0</span><span class="stat-label">Priorité haute</span></div>
+        <div class="stat-card"><span class="stat-value" id="nat-temps">—</span><span class="stat-label">Temps de réponse moyen</span></div>
+        <div class="stat-card"><span class="stat-value" id="nat-citoyens">0</span><span class="stat-label">Citoyens inscrits</span></div>
+      </div>
+
+      <div class="stats-charts-grid">
+        <div class="chart-card">
+          <h3>Alertes par type</h3>
+          <div class="chart-wrapper"><canvas id="chart-type"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>Alertes par quartier</h3>
+          <div class="chart-wrapper"><canvas id="chart-quartier"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>Pics horaires</h3>
+          <div class="chart-wrapper"><canvas id="chart-heures"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>Évolution sur 14 jours</h3>
+          <div class="chart-wrapper"><canvas id="chart-evolution"></canvas></div>
+        </div>
+      </div>
+
+      <div class="chart-card full-width">
+        <h3>Carte de chaleur des zones à risque</h3>
+        <div id="heatmap-map"></div>
+      </div>
+    </section>
+
+    <!-- ===================== Gestion des comptes ===================== -->
+    <section id="tab-comptes" class="tab-panel padded hidden">
+      <h2>Gestion des comptes</h2>
+      <div class="admin-toolbar">
+        <button class="admin-btn-primary" id="nouveau-compte-btn"><i class="fa-solid fa-user-plus"></i> Nouveau compte professionnel</button>
+      </div>
+
+      <section id="compte-form-section" class="panel hidden">
+        <button id="compte-form-back" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Annuler</button>
+        <h2>Créer un compte professionnel</h2>
+
+        <label for="compte-nom">Nom</label>
+        <input id="compte-nom" type="text" placeholder="Nom du compte ou de l'entité" />
+
+        <label for="compte-prenom">Prénom (optionnel)</label>
+        <input id="compte-prenom" type="text" />
+
+        <label for="compte-email">Email</label>
+        <input id="compte-email" type="email" placeholder="compte@alertcitoyen.ga" />
+
+        <label for="compte-password">Mot de passe</label>
+        <input id="compte-password" type="password" />
+
+        <label for="compte-role">Rôle</label>
+        <select id="compte-role">
+          <option value="dispatch">Dispatch national</option>
+          <option value="entite">Entité d'intervention</option>
+          <option value="super_admin">Super administrateur</option>
+        </select>
+
+        <div id="compte-type-entite-wrapper">
+          <label for="compte-type-entite">Type d'entité</label>
+          <select id="compte-type-entite">
+            <option value="police">Police</option>
+            <option value="pompiers">Pompiers</option>
+            <option value="samu">SAMU</option>
+            <option value="mairie">Mairie</option>
+          </select>
+        </div>
+
+        <button id="compte-submit-btn" class="send-btn"><i class="fa-solid fa-floppy-disk"></i> Créer le compte</button>
+      </section>
+
+      <div class="comptes-table-wrapper">
+        <table class="comptes-table">
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>Rôle</th>
+              <th>Entité</th>
+              <th>Contact</th>
+              <th>Créé le</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="comptes-table-body">
+            <tr><td colspan="6">Chargement...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===================== Supervision des entités ===================== -->
+    <section id="tab-entites" class="tab-panel padded hidden">
+      <h2>Supervision des entités</h2>
+      <div class="entite-supervision-grid" id="entite-supervision-grid">
+        <p class="empty-state">Chargement...</p>
+      </div>
+    </section>
+
+    <!-- ===================== Unités Police (placement + zones) ===================== -->
+    <section id="tab-unites" class="tab-panel padded hidden">
+      <h2>Unités de police — Grand Libreville</h2>
+      <div class="unites-toolbar">
+        <p style="color: var(--color-text-secondary); font-size: 0.85rem; margin: 0; max-width: 640px;">
+          Cliquez une unité dans la liste pour afficher son marqueur, puis faites-le glisser pour ajuster sa position.
+          Utilisez l'outil de dessin de la carte pour tracer son périmètre d'intervention. Les coordonnées non confirmées sont indiquées « à confirmer ».
+        </p>
+        <button class="admin-btn-primary" id="unite-sauvegarder-btn" disabled><i class="fa-solid fa-floppy-disk"></i> Enregistrer l'unité sélectionnée</button>
+      </div>
+
+      <div class="unites-layout">
+        <div class="unites-list-panel" id="unites-list-panel">
+          <p class="empty-state">Chargement des unités...</p>
+        </div>
+        <div class="unites-map-wrapper">
+          <div id="unites-map"></div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+  <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="/js/fiche-alerteur.js"></script>
+  <script src="/js/admin.js"></script>
+</body>
+</html>
