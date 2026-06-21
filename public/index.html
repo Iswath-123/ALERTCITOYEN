@@ -1,241 +1,308 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AlertCitoyen — République Gabonaise</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="/css/style.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0B1F3A">
+<title>AlertCitoyen — République Gabonaise</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="/css/style.css">
 </head>
-<body class="page-citoyen">
+<body>
 
-  <!-- ===================== Inscription citoyenne obligatoire ===================== -->
-  <div id="registration-gate" class="registration-gate hidden">
-    <header class="app-header">
-      <div class="header-content">
-        <div class="logo-badge has-image"><img src="/images/logos/logo-alertcitoyen.png" alt="AlertCitoyen" /></div>
-        <div class="header-text">
-          <span class="app-title">AlertCitoyen</span>
-          <span class="app-subtitle">République Gabonaise</span>
+<!-- ===== Inscription ===== -->
+<div class="onboard" id="onboard" style="display:none;">
+  <div class="ob-wrap">
+
+    <div class="ob-brand">
+      <div class="ob-tricolor"><i></i><i></i><i></i></div>
+      <div class="ob-brand-inner">
+        <div class="ob-brand-mark">
+          <img src="/images/logos/logo-alertcitoyen.png" alt="Logo AlertCitoyen">
+          <div><div class="bn">AlertCitoyen</div><div class="bs">RÉPUBLIQUE GABONAISE</div></div>
+        </div>
+
+        <h1>Votre sécurité tient à <span>un signalement précis.</span></h1>
+        <p class="ob-lead">Un compte vérifié permet aux secours de vous identifier et de vous recontacter immédiatement en cas d'alerte.</p>
+
+        <div class="ob-perks">
+          <div class="ob-perk">
+            <div class="pic"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 7v6c0 5.25 3.75 9.74 9 11 5.25-1.26 9-5.75 9-11V7l-9-5Z"/></svg></div>
+            <p>Données traitées <b>sous l'autorité du Ministère de l'Intérieur,</b> uniquement en cas de signalement.</p>
+          </div>
+          <div class="ob-perk">
+            <div class="pic"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+            <p><b>Identité vérifiée à l'inscription</b> pour fiabiliser chaque signalement.</p>
+          </div>
+        </div>
+
+        <div class="ob-brand-trust">
+          <img src="/images/logos/logo-ministere-interieur.jpg" alt="Ministère de l'Intérieur">
+          <img src="/images/logos/logo-forces-police-nationale.jpg" alt="Forces de Police Nationale">
+          <p>Plateforme officielle de signalement d'urgence du Gabon.</p>
         </div>
       </div>
-    </header>
-    <div class="tricolor-band"><span class="green"></span><span class="yellow"></span><span class="blue"></span></div>
-
-    <div class="registration-card">
-      <div class="registration-intro">
-        <i class="fa-solid fa-id-card"></i>
-        <h2>Bienvenue sur AlertCitoyen</h2>
-        <p>Créez votre compte citoyen pour pouvoir signaler un incident et être recontacté en cas de besoin.</p>
-      </div>
-
-      <label for="reg-nom">Nom</label>
-      <input id="reg-nom" type="text" placeholder="Votre nom" />
-
-      <label for="reg-prenom">Prénom</label>
-      <input id="reg-prenom" type="text" placeholder="Votre prénom" />
-
-      <label for="reg-telephone">Numéro de téléphone</label>
-      <input id="reg-telephone" type="tel" placeholder="+241 XX XXX XXX" />
-
-      <label for="reg-whatsapp">Numéro WhatsApp</label>
-      <input id="reg-whatsapp" type="tel" placeholder="+241 XX XXX XXX" />
-      <div class="registration-checkbox">
-        <input id="reg-whatsapp-identique" type="checkbox" checked />
-        <label for="reg-whatsapp-identique" style="margin: 0;">Identique au numéro de téléphone</label>
-      </div>
-
-      <label for="reg-quartier">Quartier de résidence</label>
-      <input id="reg-quartier" type="text" placeholder="Ex : Glass, Akanda, Nzeng-Ayong..." />
-
-      <label>Photo (optionnel)</label>
-      <div class="photo-upload">
-        <div class="photo-upload-preview" id="reg-photo-preview"><i class="fa-solid fa-user"></i></div>
-        <button type="button" class="photo-upload-btn" id="reg-photo-btn">Choisir une photo</button>
-        <input id="reg-photo-input" type="file" accept="image/*" class="hidden" />
-      </div>
-
-      <div id="reg-error" class="login-error hidden"></div>
-
-      <button id="reg-submit-btn" class="send-btn"><i class="fa-solid fa-user-check"></i> Créer mon compte</button>
     </div>
-  </div>
 
-  <header class="app-header">
-    <div class="header-content">
-      <div class="logo-badge has-image"><img src="/images/logos/logo-alertcitoyen.png" alt="AlertCitoyen" /></div>
-      <div class="header-text">
-        <span class="app-title">AlertCitoyen</span>
-        <span class="app-subtitle">République Gabonaise</span>
+    <div class="ob-formside">
+      <div class="ob-form-head">
+        <span class="ob-eyebrow"><i></i>Inscription citoyenne</span>
+        <h2>Créer mon compte</h2>
+        <p>Deux minutes suffisent. Vos informations restent confidentielles et ne servent qu'en cas d'alerte.</p>
       </div>
-    </div>
-  </header>
-  <div class="tricolor-band"><span class="green"></span><span class="yellow"></span><span class="blue"></span></div>
 
-  <div class="gps-bar" id="gps-bar">
-    <i class="fa-solid fa-location-dot"></i>
-    <span id="gps-bar-text">Localisation en cours...</span>
-    <button class="gps-bar-refresh" id="gps-bar-refresh" aria-label="Actualiser la position"><i class="fa-solid fa-rotate"></i></button>
-  </div>
-
-  <main class="citoyen-main">
-
-    <!-- ===================== Vue Accueil ===================== -->
-    <section id="view-accueil" class="view">
-
-      <section id="sos-view" class="sos-section">
-        <div class="sos-wrapper">
-          <svg class="sos-progress" viewBox="0 0 170 170">
-            <circle class="sos-progress-bg" cx="85" cy="85" r="79"></circle>
-            <circle class="sos-progress-fill" id="sos-progress-fill" cx="85" cy="85" r="79"></circle>
-          </svg>
-          <button id="sos-btn" class="sos-button" aria-label="Bouton SOS — maintenir 3 secondes">
-            <span class="sos-icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
-            <span class="sos-label">SOS</span>
-          </button>
+      <form id="regForm">
+        <div class="ob-row2">
+          <div class="ob-f">
+            <label for="nom">Nom *</label>
+            <input id="nom" type="text" placeholder="Ondo" required>
+          </div>
+          <div class="ob-f">
+            <label for="prenom">Prénom</label>
+            <input id="prenom" type="text" placeholder="Sandrine">
+          </div>
         </div>
-        <p class="sos-hint">Maintenez appuyé 3 secondes pour envoyer une alerte d'urgence</p>
-      </section>
 
-      <section class="voice-section">
-        <button id="voice-main-btn" class="voice-main-btn">
-          <i class="fa-solid fa-microphone"></i> Signaler à la voix
+        <div class="ob-f">
+          <label for="tel">Numéro de téléphone *</label>
+          <div class="ob-input-wrap">
+            <span class="ob-tel-prefix">+241</span>
+            <input class="ob-tel-input" id="tel" type="tel" placeholder="077 00 00 00" required>
+          </div>
+        </div>
+
+        <div class="ob-switch-row">
+          <span>WhatsApp identique au téléphone</span>
+          <label class="ob-switch"><input type="checkbox" id="sameWa" checked><span class="ob-slider"></span></label>
+        </div>
+        <div class="ob-wa-field" id="waField">
+          <label for="wa">Numéro WhatsApp</label>
+          <div class="ob-input-wrap">
+            <span class="ob-tel-prefix">+241</span>
+            <input class="ob-tel-input" id="wa" type="tel" placeholder="077 00 00 00">
+          </div>
+        </div>
+
+        <div class="ob-f">
+          <label for="quartier">Quartier de résidence</label>
+          <select id="quartier">
+            <option value="">Sélectionner un quartier</option>
+            <option>Louis</option><option>Akanda</option><option>Owendo</option>
+            <option>Nzeng-Ayong</option><option>Glass</option><option>Batterie IV</option>
+            <option>Lalala</option><option value="Autre">Autre</option>
+          </select>
+        </div>
+        <div class="ob-f" id="quartierAutreField" style="display:none;">
+          <label for="quartierAutre">Précisez votre quartier</label>
+          <input id="quartierAutre" type="text" placeholder="Nom du quartier">
+        </div>
+
+        <div class="ob-photo-row">
+          <div class="ob-avatar" id="avatar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <img id="avatarImg" alt="" style="display:none;">
+          </div>
+          <div class="ob-photo-actions">
+            <button type="button" class="ob-photo-btn" id="photoBtn">Ajouter une photo</button>
+            <span class="ob-hint">Facultatif — aide à vous identifier</span>
+          </div>
+          <input type="file" id="photoInput" accept="image/*" class="hidden">
+        </div>
+
+        <p class="ob-error" id="obError"></p>
+
+        <label class="ob-consent">
+          <input type="checkbox" id="consent" required>
+          <p>J'accepte que mes coordonnées soient transmises aux services d'urgence compétents en cas de signalement.</p>
+        </label>
+
+        <button type="submit" class="ob-submit-btn" id="submitBtn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+          Créer mon compte et continuer
         </button>
-      </section>
+        <p class="ob-foot-note">En continuant, vous acceptez les conditions d'utilisation d'AlertCitoyen.</p>
+      </form>
+    </div>
 
-      <section id="categories-view" class="categories-section">
-        <h2>Signaler un incident</h2>
-        <div class="categories-grid" id="categories-grid">
-          <button class="category-btn" data-type="agression" data-label="Agression">
-            <span class="cat-icon"><i class="fa-solid fa-hand-fist"></i></span><span>Agression</span>
-          </button>
-          <button class="category-btn" data-type="accident" data-label="Accident">
-            <span class="cat-icon"><i class="fa-solid fa-car-burst"></i></span><span>Accident</span>
-          </button>
-          <button class="category-btn" data-type="incendie" data-label="Incendie">
-            <span class="cat-icon"><i class="fa-solid fa-fire"></i></span><span>Incendie</span>
-          </button>
-          <button class="category-btn" data-type="inondation" data-label="Inondation">
-            <span class="cat-icon"><i class="fa-solid fa-water"></i></span><span>Inondation</span>
-          </button>
-          <button class="category-btn" data-type="secours_medical" data-label="Secours médical">
-            <span class="cat-icon"><i class="fa-solid fa-suitcase-medical"></i></span><span>Secours médical</span>
-          </button>
-          <button class="category-btn" data-type="autre" data-label="Autre">
-            <span class="cat-icon"><i class="fa-solid fa-circle-question"></i></span><span>Autre</span>
-          </button>
-        </div>
-      </section>
+  </div>
+</div>
 
-      <!-- Formulaire catégorie -->
-      <section id="form-section" class="panel hidden">
-        <button id="form-back" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Retour</button>
-        <h2 id="form-title">Signaler un incident</h2>
+<!-- ===== Header ===== -->
+<div class="app-header">
+  <img class="mark" src="/images/logos/logo-alertcitoyen.png" alt="Logo AlertCitoyen">
+  <div class="word">
+    <div class="name">AlertCitoyen</div>
+    <div class="sub">RÉPUBLIQUE GABONAISE</div>
+  </div>
+  <button class="bell" id="bellBtn" aria-label="Notifications">
+    <span class="ping" id="bellPing"></span>
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+  </button>
+</div>
+<div class="tricolor"><i></i><i></i><i></i></div>
 
-        <label for="description">Description (optionnel)</label>
-        <textarea id="description" rows="4" placeholder="Décrivez la situation en quelques mots..."></textarea>
+<div class="gps-strip">
+  <svg class="pin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+  <span>Détection de la position…</span>
+  <span class="acc"><span class="acc-bars"><i></i><i></i><i></i><i></i></span><span class="acc-label">—</span></span>
+</div>
 
-        <button id="gps-btn" class="gps-btn"><i class="fa-solid fa-location-crosshairs"></i> Utiliser ma position GPS</button>
-        <div id="position-preview" class="position-preview hidden"></div>
+<!-- ===== Contenu ===== -->
+<div class="content">
 
-        <button id="send-btn" class="send-btn"><i class="fa-solid fa-paper-plane"></i> Envoyer l'alerte</button>
-      </section>
+  <div class="view" id="viewAccueil">
 
-      <!-- Panneau vocal -->
-      <section id="voice-panel" class="panel hidden">
-        <button id="voice-back" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Retour</button>
-        <h2>Signaler à la voix</h2>
+  <div class="sos-zone">
+    <div class="dial">
+      <div class="pulse p1"></div><div class="pulse p2"></div><div class="pulse p3"></div>
+      <svg class="ring" width="178" height="178" viewBox="0 0 178 178">
+        <circle class="track" cx="89" cy="89" r="83"/>
+        <circle class="progress" id="ringProgress" cx="89" cy="89" r="83" stroke-dasharray="521" stroke-dashoffset="521"/>
+      </svg>
+      <button class="sos-core" id="sosBtn" aria-label="Maintenir 3 secondes pour envoyer une alerte SOS">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+        <div class="label">SOS</div>
+        <div class="hint">Maintenir 3 sec.</div>
+      </button>
+    </div>
+    <p class="sos-caption">Déclenche une alerte <b>priorité haute</b> avec votre position exacte.</p>
+  </div>
 
-        <div class="mic-indicator" id="mic-indicator"><i class="fa-solid fa-microphone"></i></div>
-        <p class="voice-status-text" id="voice-status-text">Appuyez sur le micro et décrivez la situation</p>
+  <button class="voice-btn" id="voiceBtn">
+    <div class="vicon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+    </div>
+    <div class="vtext">
+      <div class="t">Signaler à la voix</div>
+      <div class="s" id="voiceSub">Parlez, on s'occupe du reste</div>
+    </div>
+    <div class="bars"><i></i><i></i><i></i><i></i><i></i></div>
+  </button>
 
-        <button id="voice-mic-btn" class="voice-mic-btn"><i class="fa-solid fa-microphone"></i> Démarrer l'enregistrement</button>
+  <div class="transcript" id="transcript">
+    <div class="tlabel">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      Transcription
+    </div>
+    <span id="transcriptText"></span>
+    <select id="transcriptCat">
+      <option value="agression">Agression</option>
+      <option value="accident">Accident</option>
+      <option value="incendie">Incendie</option>
+      <option value="inondation">Inondation</option>
+      <option value="secours médical">Secours médical</option>
+      <option value="autre">Autre</option>
+    </select>
+    <div class="actions">
+      <button class="retry" id="retryBtn">Réessayer</button>
+      <button class="send" id="sendVoiceBtn">Envoyer l'alerte</button>
+    </div>
+  </div>
 
-        <div class="voice-transcript" id="voice-transcript"><span class="placeholder">La transcription apparaîtra ici...</span></div>
+  <div class="section-title"><h2>Signaler un type d'incident</h2></div>
+  <div class="cat-grid">
+    <div class="cat" data-cat="Agression"><div class="ci" style="background:rgba(200,16,46,.10)"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#C8102E" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></div><span>Agression</span></div>
+    <div class="cat" data-cat="Accident"><div class="ci" style="background:rgba(181,101,10,.10)"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#B5650A" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17H3v-4l2-5h11l3 5v4h-2"/><circle cx="7.5" cy="17.5" r="1.7"/><circle cx="17.5" cy="17.5" r="1.7"/></svg></div><span>Accident</span></div>
+    <div class="cat" data-cat="Incendie"><div class="ci" style="background:rgba(194,84,12,.10)"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#C2540C" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 17a2.5 2.5 0 0 0 2.5-2.5c0-1.5-1.5-2-1-3.5 1.5.5 3 2 3 4a4.5 4.5 0 0 1-9 0c0-3 2-4 1.5-7C12 9 14.5 12 14.5 14.5"/></svg></div><span>Incendie</span></div>
+    <div class="cat" data-cat="Inondation"><div class="ci" style="background:rgba(58,117,196,.10)"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#3A75C4" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69s-6 7.27-6 11.31a6 6 0 0 0 12 0c0-4.04-6-11.31-6-11.31Z"/></svg></div><span>Inondation</span></div>
+    <div class="cat" data-cat="Secours médical"><div class="ci" style="background:rgba(23,138,102,.10)"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#178A66" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div><span>Secours médical</span></div>
+    <div class="cat" data-cat="Autre"><div class="ci" style="background:rgba(90,110,136,.10)"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#5A6E88" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></div><span>Autre</span></div>
+  </div>
 
-        <div id="voice-type-detected" class="voice-type-detected hidden"></div>
+  <div class="section-title"><h2>Mes signalements récents</h2></div>
+  <div class="recent-list" id="recentList">
+    <div class="empty-state">Chargement…</div>
+  </div>
 
-        <button id="voice-send-btn" class="send-btn hidden"><i class="fa-solid fa-paper-plane"></i> Envoyer l'alerte</button>
-      </section>
+  </div>
 
-      <!-- Confirmation -->
-      <section id="confirmation-section" class="hidden">
-        <div class="confirmation-card">
-          <i class="fa-solid fa-circle-check"></i>
-          <h2>Alerte envoyée</h2>
-          <p class="confirmation-message">Les secours ont été notifiés. Restez en sécurité, une équipe traite votre signalement.</p>
-          <p>Numéro de suivi</p>
-          <div class="tracking-number" id="tracking-number">#XXXXXXXX</div>
-          <div>
-            <button id="new-alert-btn" class="secondary-btn">Nouvelle alerte</button>
-          </div>
-        </div>
-      </section>
+  <!-- ===== Vue Alertes ===== -->
+  <div class="view hidden" id="viewAlertes">
+    <div class="section-title"><h2>Mes alertes</h2></div>
+    <div class="recent-list" id="recentListFull">
+      <div class="empty-state">Aucune alerte envoyée pour le moment.</div>
+    </div>
+  </div>
 
-      <section class="recent-section">
-        <h2>Mes alertes récentes</h2>
-        <ul id="recent-list-home" class="recent-list">
-          <li class="empty-state">Aucune alerte envoyée pour le moment.</li>
-        </ul>
-      </section>
+  <!-- ===== Vue Carte ===== -->
+  <div class="view hidden" id="viewCarte">
+    <div class="section-title"><h2>Carte des signalements</h2></div>
+    <div id="citizenMap" class="citizen-map"></div>
+  </div>
 
-    </section>
+  <!-- ===== Vue Profil ===== -->
+  <div class="view hidden" id="viewProfil">
+    <div class="section-title"><h2>Mon profil</h2></div>
 
-    <!-- ===================== Vue Mes alertes ===================== -->
-    <section id="view-alertes" class="view hidden">
-      <h2>Mes alertes</h2>
-      <ul id="recent-list-full" class="recent-list">
-        <li class="empty-state">Aucune alerte envoyée pour le moment.</li>
-      </ul>
-    </section>
-
-    <!-- ===================== Vue Carte ===================== -->
-    <section id="view-carte" class="view hidden">
-      <h2>Carte des signalements</h2>
-      <div id="citizen-map" class="citizen-map"></div>
-    </section>
-
-    <!-- ===================== Vue Profil ===================== -->
-    <section id="view-profil" class="view hidden">
-      <h2>Mon profil</h2>
-
-      <div id="profile-card" class="profile-card">
-        <div class="profile-avatar" id="profile-avatar"><i class="fa-solid fa-user"></i></div>
-        <h3 id="profile-nom">—</h3>
-        <p id="profile-quartier">—</p>
-        <p id="profile-telephone">—</p>
-        <p id="profile-whatsapp">—</p>
-        <button id="profile-reset-btn" class="secondary-btn">Réinitialiser mon inscription</button>
+    <div class="profile-card">
+      <div class="profile-avatar" id="profileAvatar">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       </div>
+      <h3 id="profileNom">—</h3>
+      <p id="profileQuartier">—</p>
+      <p id="profileTelephone">—</p>
+      <p id="profileWhatsapp">—</p>
+    </div>
 
-      <section class="panel">
-        <h2>Mon historique</h2>
-        <div class="alerteur-stats">
-          <div class="stat-card">
-            <span class="stat-value" id="profile-total-alertes">0</span>
-            <span class="stat-label">Alertes émises</span>
-          </div>
-          <div class="stat-card">
-            <span class="stat-value" id="profile-alertes-resolues">0</span>
-            <span class="stat-label">Résolues</span>
-          </div>
-        </div>
-        <div class="alerteur-fiabilite" id="profile-fiabilite"><i class="fa-solid fa-gauge-high"></i> —</div>
-      </section>
-    </section>
+    <div class="profile-stats">
+      <div class="stat"><b id="profileTotalAlertes">0</b><span>Alertes émises</span></div>
+      <div class="stat"><b id="profileAlertesResolues">0</b><span>Résolues</span></div>
+    </div>
+    <div class="profile-fiabilite" id="profileFiabilite">Fiabilité —</div>
 
-  </main>
+    <button class="profile-reset" id="profileResetBtn">Réinitialiser mon inscription</button>
+  </div>
 
-  <nav class="bottom-nav">
-    <button class="nav-btn active" data-view="accueil"><i class="fa-solid fa-house"></i><span>Accueil</span></button>
-    <button class="nav-btn" data-view="alertes"><i class="fa-solid fa-list"></i><span>Mes alertes</span></button>
-    <button class="nav-btn" data-view="carte"><i class="fa-solid fa-map"></i><span>Carte</span></button>
-    <button class="nav-btn" data-view="profil"><i class="fa-solid fa-user"></i><span>Profil</span></button>
-  </nav>
+</div>
 
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="/js/main.js"></script>
+<div class="bottom-nav">
+  <button class="navitem active" data-view="accueil"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Accueil</span></button>
+  <button class="navitem" data-view="alertes"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg><span>Alertes</span></button>
+  <button class="navitem" data-view="carte"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/></svg><span>Carte</span></button>
+  <button class="navitem" data-view="profil"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profil</span></button>
+</div>
+
+<div class="toast" id="toast">
+  <div class="ticon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+  <div class="ttext" id="toastText"></div>
+</div>
+
+<div class="sheet-backdrop" id="sheetBackdrop"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true">
+  <div class="grabber"></div>
+  <div class="sheet-head">
+    <div class="si" id="sheetIcon"></div>
+    <div><h3 id="sheetTitle">Agression</h3><p>Décrivez brièvement la situation</p></div>
+  </div>
+  <textarea id="sheetDesc" placeholder="Optionnel — ex : deux individus, près de la pharmacie..."></textarea>
+  <div class="gps-row">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+    Votre position sera jointe automatiquement
+  </div>
+  <button class="send-btn" id="sheetSend">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    Envoyer l'alerte
+  </button>
+  <button class="cancel" id="sheetCancel">Annuler</button>
+</div>
+
+<div class="sos-overlay" id="sosOverlay">
+  <div class="rings">
+    <div class="r"></div><div class="r"></div><div class="r"></div>
+    <div class="core"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#C8102E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+  </div>
+  <h3 id="overlayTitle">Transmission de votre position…</h3>
+  <p id="overlaySub">Ne quittez pas l'application.</p>
+  <span class="code" id="overlayCode"></span>
+  <button class="closebtn" id="overlayClose">Fermer</button>
+  <button class="cancelbtn" id="overlayCancel">Annuler l'envoi</button>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="/js/app.js"></script>
 </body>
 </html>

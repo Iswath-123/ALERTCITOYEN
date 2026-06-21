@@ -50,6 +50,11 @@ function emettreAuxRooms(io, evenement, alerte) {
   // plusieurs d'entre elles (ex. la police, qui supervise aussi pompiers/samu)
   // ne reçoit l'événement qu'une seule fois, au lieu d'une fois par room.
   let cible = io.to('role:dispatch').to('role:super_admin');
+  if (alerte.user_id) {
+    // Le citoyen à l'origine de l'alerte reçoit aussi la mise à jour de
+    // statut en temps réel sur sa propre room.
+    cible = cible.to(`citoyen:${alerte.user_id}`);
+  }
   (alerte.entite_affectee || '').split(',').filter(Boolean).forEach((entite) => {
     if (entite !== 'dispatch') {
       cible = cible.to(`entite:${entite}`);

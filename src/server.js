@@ -40,7 +40,7 @@ io.on('connection', (socket) => {
 
   // Les comptes professionnels rejoignent une room dédiée pour ne recevoir
   // que les alertes qui les concernent (dispatch/admin reçoivent tout).
-  socket.on('auth:join', ({ role, type_entite }) => {
+  socket.on('auth:join', ({ role, type_entite, user_id }) => {
     if (role === 'dispatch' || role === 'super_admin') {
       socket.join(`role:${role}`);
     } else if (role === 'entite' && type_entite) {
@@ -51,6 +51,10 @@ io.on('connection', (socket) => {
         socket.join('entite:pompiers');
         socket.join('entite:samu');
       }
+    } else if (role === 'citoyen' && user_id) {
+      // Permet au citoyen de recevoir la mise à jour temps réel de ses
+      // propres alertes (changement de statut), sans accès aux autres.
+      socket.join(`citoyen:${user_id}`);
     }
   });
 
