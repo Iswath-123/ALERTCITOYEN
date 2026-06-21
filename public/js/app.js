@@ -101,6 +101,16 @@
     }
     onboard.style.display = 'flex';
 
+    const obWrap = onboard.querySelector('.ob-wrap');
+    document.getElementById('obNextBtn').addEventListener('click', () => {
+      obWrap.classList.add('step-form');
+      onboard.scrollTop = 0;
+    });
+    document.getElementById('obBackBtn').addEventListener('click', () => {
+      obWrap.classList.remove('step-form');
+      onboard.scrollTop = 0;
+    });
+
     const sameWa = document.getElementById('sameWa');
     const waField = document.getElementById('waField');
     const wa = document.getElementById('wa');

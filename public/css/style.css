@@ -957,9 +957,11 @@ body { display: flex; flex-direction: column; min-height: 100dvh; overscroll-beh
 .toast .ttext b { font-family: var(--font-mono); font-weight: 500; }
 
 /* Inscription citoyenne obligatoire */
-.onboard { position: fixed; inset: 0; background: var(--canvas); z-index: 50; display: flex; align-items: center; justify-content: center; overflow-y: auto; padding: 24px 16px; }
-.onboard .ob-wrap { width: 100%; max-width: 920px; background: var(--card); border-radius: 22px; overflow: hidden; box-shadow: var(--shadow-lg); display: grid; grid-template-columns: 1fr; }
-@media (min-width: 760px) { .onboard .ob-wrap { grid-template-columns: 1fr 1fr; } }
+.onboard { position: fixed; inset: 0; background: var(--canvas); z-index: 50; display: flex; align-items: flex-start; justify-content: center; overflow-y: auto; padding: 24px 16px; }
+.onboard .ob-wrap { width: 100%; max-width: 480px; margin: auto 0; background: var(--card); border-radius: 22px; overflow: hidden; box-shadow: var(--shadow-lg); display: grid; grid-template-columns: 1fr; }
+.onboard .ob-formside { display: none; }
+.onboard .ob-wrap.step-form .ob-brand { display: none; }
+.onboard .ob-wrap.step-form .ob-formside { display: flex; }
 
 .onboard .ob-brand { background: radial-gradient(560px 420px at 18% 0%, rgba(58,117,196,.35), transparent 60%), radial-gradient(420px 420px at 100% 100%, rgba(0,150,57,.22), transparent 55%), linear-gradient(165deg, var(--navy), #142C52 70%); color: #fff; position: relative; overflow: hidden; display: flex; flex-direction: column; }
 .onboard .ob-tricolor { display: flex; height: 4px; flex-shrink: 0; }
@@ -980,11 +982,20 @@ body { display: flex; flex-direction: column; min-height: 100dvh; overscroll-beh
 .onboard .ob-perk .pic { width: 24px; height: 24px; border-radius: 8px; background: rgba(255,255,255,.10); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
 .onboard .ob-perk p { margin: 0; font-size: 11.5px; color: #D7E1F0; line-height: 1.5; }
 .onboard .ob-perk p b { color: #fff; font-weight: 600; }
+.onboard .ob-next-btn {
+  margin-top: 22px; border: none; border-radius: 13px; padding: 13px 0; width: 100%;
+  background: var(--gabon-yellow); color: var(--navy); font-family: var(--font-display); font-weight: 700;
+  font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.onboard .ob-back-btn {
+  background: none; border: none; color: var(--t2); font-size: 12px; font-weight: 600; cursor: pointer;
+  display: flex; align-items: center; gap: 5px; padding: 0; margin-bottom: 14px;
+}
 .onboard .ob-brand-trust { margin-top: 22px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,.14); display: flex; align-items: center; gap: 8px; }
 .onboard .ob-brand-trust img { height: 28px; width: auto; border-radius: 6px; background: #fff; padding: 2px; }
 .onboard .ob-brand-trust p { font-size: 9px; color: #90A6C6; line-height: 1.4; margin: 0; }
 
-.onboard .ob-formside { padding: 28px 24px 24px; display: flex; flex-direction: column; overflow-y: auto; }
+.onboard .ob-formside { padding: 28px 24px 24px; flex-direction: column; overflow-y: auto; }
 .onboard .ob-form-head { margin-bottom: 18px; }
 .onboard .ob-eyebrow { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--gabon-blue); margin-bottom: 8px; }
 .onboard .ob-eyebrow i { width: 6px; height: 6px; border-radius: 50%; background: var(--gabon-blue); }
