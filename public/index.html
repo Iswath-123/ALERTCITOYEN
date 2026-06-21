@@ -286,9 +286,15 @@
   <div class="grabber"></div>
   <div class="sheet-head">
     <div class="si" id="sheetIcon"></div>
-    <div><h3 id="sheetTitle">Agression</h3><p>Décrivez brièvement la situation</p></div>
+    <div><h3 id="sheetTitle">Agression</h3><p>Décrivez les faits — obligatoire</p></div>
   </div>
-  <textarea id="sheetDesc" placeholder="Optionnel — ex : deux individus, près de la pharmacie..."></textarea>
+  <div class="sheet-desc-wrap">
+    <textarea id="sheetDesc" placeholder="Que s'est-il passé ? Ex : deux individus, près de la pharmacie..." required></textarea>
+    <button type="button" class="sheet-mic-btn" id="sheetMicBtn" aria-label="Dicter à la voix">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+    </button>
+  </div>
+  <p class="sheet-error" id="sheetError"></p>
 
   <div class="sheet-media">
     <label class="sheet-media-btn" for="sheetPhotoInput">

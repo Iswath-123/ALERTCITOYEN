@@ -511,7 +511,9 @@
     const sheetIcon = document.getElementById('sheetIcon');
     const sheetTitle = document.getElementById('sheetTitle');
     const sheetDesc = document.getElementById('sheetDesc');
+    const sheetError = document.getElementById('sheetError');
     const sheetSend = document.getElementById('sheetSend');
+    const sheetMicBtn = document.getElementById('sheetMicBtn');
     const sheetPhotoInput = document.getElementById('sheetPhotoInput');
     const sheetVideoInput = document.getElementById('sheetVideoInput');
     const sheetPhotoLabel = document.getElementById('sheetPhotoLabel');
@@ -521,6 +523,49 @@
     const sheetPhotoLabelEl = document.querySelector('label[for="sheetPhotoInput"]');
     const sheetVideoLabelEl = document.querySelector('label[for="sheetVideoInput"]');
     let currentType = null;
+
+    // Dictée de la description — instance dédiée, distincte du bouton vocal
+    // de l'accueil (catégorie déjà connue ici, pas de détection à faire).
+    const SpeechRecognitionImpl = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let sheetRecognition = null;
+    let sheetRecording = false;
+
+    function stopDictation() {
+      if (sheetRecognition) { sheetRecognition.stop(); sheetRecognition = null; }
+      sheetRecording = false;
+      sheetMicBtn.classList.remove('recording');
+    }
+
+    sheetMicBtn.addEventListener('click', () => {
+      if (sheetRecording) { stopDictation(); return; }
+      if (!SpeechRecognitionImpl) {
+        showToast("La dictée vocale n'est pas disponible sur ce navigateur.");
+        return;
+      }
+      sheetRecognition = new SpeechRecognitionImpl();
+      sheetRecognition.lang = 'fr-FR';
+      sheetRecognition.continuous = true;
+      sheetRecognition.interimResults = false;
+      sheetRecognition.onresult = (e) => {
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          if (e.results[i].isFinal) {
+            const morceau = e.results[i][0].transcript.trim();
+            sheetDesc.value = sheetDesc.value ? `${sheetDesc.value} ${morceau}` : morceau;
+            sheetError.classList.remove('show');
+          }
+        }
+      };
+      sheetRecognition.onerror = (e) => {
+        stopDictation();
+        if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+          showToast("Micro refusé ou indisponible (le site doit être en HTTPS sur la plupart des téléphones).");
+        }
+      };
+      sheetRecognition.onend = () => { if (sheetRecording) stopDictation(); };
+      sheetRecognition.start();
+      sheetRecording = true;
+      sheetMicBtn.classList.add('recording');
+    });
 
     function resetMedia() {
       sheetPhotoInput.value = '';
@@ -550,22 +595,34 @@
         sheetIcon.style.background = icon.bg;
         sheetIcon.innerHTML = icon.svg;
         sheetDesc.value = '';
+        sheetError.classList.remove('show');
         resetMedia();
         sheet.classList.add('open');
         sheetBackdrop.classList.add('open');
       });
     });
 
-    function closeSheet() { sheet.classList.remove('open'); sheetBackdrop.classList.remove('open'); }
+    function closeSheet() {
+      stopDictation();
+      sheet.classList.remove('open');
+      sheetBackdrop.classList.remove('open');
+    }
     document.getElementById('sheetCancel').addEventListener('click', closeSheet);
     sheetBackdrop.addEventListener('click', closeSheet);
 
     sheetSend.addEventListener('click', async () => {
+      const description = sheetDesc.value.trim();
+      if (!description) {
+        sheetError.textContent = 'Merci de décrire les faits, par écrit ou à la voix (🎤), avant d\'envoyer.';
+        sheetError.classList.add('show');
+        return;
+      }
+      stopDictation();
       sheetSend.disabled = true;
       try {
         const photo = sheetPhotoInput.files[0] || null;
         const video = sheetVideoInput.files[0] || null;
-        const alerte = await envoyerAlerte(currentType, sheetDesc.value.trim() || null, photo, video);
+        const alerte = await envoyerAlerte(currentType, description, photo, video);
         closeSheet();
         if (alerte.horsLigne) {
           showToast("Alerte enregistrée — sera envoyée dès le retour de la connexion.");
