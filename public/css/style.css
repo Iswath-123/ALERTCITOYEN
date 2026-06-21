@@ -1054,13 +1054,6 @@ body { display: flex; flex-direction: column; min-height: 100dvh; overscroll-beh
 .onboard .ob-wa-field { max-height: 0; opacity: 0; overflow: hidden; transition: max-height .25s ease, opacity .2s ease; display: flex; flex-direction: column; gap: 5px; }
 .onboard .ob-wa-field.open { max-height: 80px; opacity: 1; margin-top: 1px; }
 
-.onboard .ob-photo-row { display: flex; align-items: center; gap: 12px; }
-.onboard .ob-avatar { width: 50px; height: 50px; border-radius: 50%; background: var(--canvas); border: 1.5px dashed var(--line-strong); display: flex; align-items: center; justify-content: center; color: var(--t3); flex-shrink: 0; overflow: hidden; position: relative; }
-.onboard .ob-avatar img { width: 100%; height: 100%; object-fit: cover; }
-.onboard .ob-photo-actions { display: flex; flex-direction: column; gap: 3px; }
-.onboard .ob-photo-btn { border: 1.4px solid var(--line-strong); background: #fff; color: var(--t1); border-radius: 9px; padding: 7px 12px; font-size: 11px; font-weight: 600; cursor: pointer; width: fit-content; }
-.onboard .ob-hint { font-size: 10px; color: var(--t3); }
-
 .onboard .ob-error { color: var(--red); font-size: 11.5px; margin: -4px 0 0; display: none; }
 .onboard .ob-error.show { display: block; }
 

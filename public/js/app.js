@@ -25,7 +25,6 @@
   let currentUser = null;
   let lastPosition = null;
   let citizenMap = null;
-  let obPhotoDataUrl = null;
 
   /* ===== Helpers ===== */
   function getCompte() {
@@ -118,9 +117,6 @@
     const quartier = document.getElementById('quartier');
     const quartierAutreField = document.getElementById('quartierAutreField');
     const quartierAutre = document.getElementById('quartierAutre');
-    const photoBtn = document.getElementById('photoBtn');
-    const photoInput = document.getElementById('photoInput');
-    const avatarImg = document.getElementById('avatarImg');
 
     function syncWa() { waField.classList.toggle('open', !sameWa.checked); }
     sameWa.addEventListener('change', syncWa);
@@ -128,19 +124,6 @@
 
     quartier.addEventListener('change', () => {
       quartierAutreField.style.display = quartier.value === 'Autre' ? 'flex' : 'none';
-    });
-
-    photoBtn.addEventListener('click', () => photoInput.click());
-    photoInput.addEventListener('change', () => {
-      const file = photoInput.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        obPhotoDataUrl = reader.result;
-        avatarImg.src = obPhotoDataUrl;
-        avatarImg.style.display = 'block';
-      };
-      reader.readAsDataURL(file);
     });
 
     document.getElementById('regForm').addEventListener('submit', async (e) => {
@@ -169,7 +152,7 @@
         const res = await fetch(`${API}/comptes/inscription-citoyen`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ nom, prenom, telephone, whatsapp, quartier: quartierValeur, photo: obPhotoDataUrl }),
+          body: JSON.stringify({ nom, prenom, telephone, whatsapp, quartier: quartierValeur }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.erreur || "Échec de l'inscription");
