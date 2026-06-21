@@ -702,7 +702,7 @@
   /* ----- Profil ----- */
   function initProfile() {
     document.getElementById('profileResetBtn').addEventListener('click', () => {
-      if (!confirm('Réinitialiser votre inscription ? Vous devrez recréer votre compte citoyen.')) return;
+      if (!confirm('Se déconnecter ? Vous pourrez vous reconnecter avec votre numéro de téléphone.')) return;
       localStorage.removeItem(COMPTE_KEY);
       window.location.reload();
     });
