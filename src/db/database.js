@@ -87,6 +87,12 @@ const colonnesAlertes = db.prepare('PRAGMA table_info(alertes)').all().map((c) =
 if (!colonnesAlertes.includes('unite_police_id')) {
   db.exec('ALTER TABLE alertes ADD COLUMN unite_police_id TEXT REFERENCES unites_police(id)');
 }
+if (!colonnesAlertes.includes('photo')) {
+  db.exec('ALTER TABLE alertes ADD COLUMN photo TEXT');
+}
+if (!colonnesAlertes.includes('video')) {
+  db.exec('ALTER TABLE alertes ADD COLUMN video TEXT');
+}
 
 const { count: comptesProCount } = db
   .prepare("SELECT COUNT(*) AS count FROM comptes WHERE role != 'citoyen'")

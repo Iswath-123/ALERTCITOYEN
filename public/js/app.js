@@ -197,6 +197,7 @@
     initNav();
     initProfile();
     loadRecentAlerts();
+    traiterFileAttente();
     setInterval(loadRecentAlerts, 15000); // repli si Socket.IO indisponible
   }
 
@@ -279,27 +280,104 @@
   }
 
   /* ----- Envoi d'une alerte (commun SOS / catégorie / vocal) ----- */
-  async function envoyerAlerte(type, description) {
-    if (!lastPosition) throw new Error('Position GPS indisponible — réessaie dans un instant.');
+  /* ----- File d'attente hors-ligne -----
+     Les Service Workers (et donc la Background Sync officielle) exigent un
+     contexte sécurisé (HTTPS), indisponible ici. On reproduit l'essentiel en
+     JS pur : localStorage + écoute de l'évènement 'online', sans dépendance
+     à un contexte sécurisé. Les pièces jointes (photo/vidéo) ne sont pas
+     mises en attente (taille incompatible avec les quotas localStorage) :
+     elles nécessitent une connexion active au moment de l'envoi. */
+  const FILE_ATTENTE_KEY = 'alertcitoyen_alertes_en_attente';
 
-    const res = await fetch(`${API}/alertes`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        type,
-        description: description || null,
-        latitude: lastPosition.latitude,
-        longitude: lastPosition.longitude,
-        accuracy: lastPosition.accuracy,
-        altitude: lastPosition.altitude,
-        position_timestamp: lastPosition.timestamp ? new Date(lastPosition.timestamp).toISOString() : null,
-        user_id: currentUser ? currentUser.id : null,
-      }),
+  function lireFileAttente() {
+    try { return JSON.parse(localStorage.getItem(FILE_ATTENTE_KEY) || '[]'); } catch { return []; }
+  }
+  function ecrireFileAttente(liste) {
+    localStorage.setItem(FILE_ATTENTE_KEY, JSON.stringify(liste));
+  }
+  function mettreEnAttente(champs) {
+    const liste = lireFileAttente();
+    liste.push(champs);
+    ecrireFileAttente(liste);
+    showToast("Pas de connexion — alerte enregistrée sur l'appareil, envoi automatique au retour du réseau.");
+  }
+
+  async function envoyerChampsAlerte(champs) {
+    const formData = new FormData();
+    Object.entries(champs).forEach(([cle, valeur]) => {
+      if (valeur !== null && valeur !== undefined) formData.append(cle, valeur);
     });
+    const res = await fetch(`${API}/alertes`, { method: 'POST', body: formData });
     const data = await res.json();
     if (!res.ok) throw new Error(data.erreur || "Échec de l'envoi");
-    loadRecentAlerts();
     return data;
+  }
+
+  async function traiterFileAttente() {
+    const liste = lireFileAttente();
+    if (!liste.length) return;
+    const restantes = [];
+    let envoyees = 0;
+    for (const champs of liste) {
+      try {
+        await envoyerChampsAlerte(champs);
+        envoyees += 1;
+      } catch {
+        restantes.push(champs);
+      }
+    }
+    ecrireFileAttente(restantes);
+    if (envoyees > 0) {
+      loadRecentAlerts();
+      showToast(`${envoyees} alerte(s) en attente envoyée(s) maintenant que la connexion est revenue.`);
+    }
+  }
+  window.addEventListener('online', traiterFileAttente);
+
+  /* ----- Envoi d'une alerte (commun SOS / catégorie / vocal) ----- */
+  async function envoyerAlerte(type, description, photo, video) {
+    if (!lastPosition) throw new Error('Position GPS indisponible — réessaie dans un instant.');
+
+    const champs = {
+      type,
+      description: description || null,
+      latitude: lastPosition.latitude,
+      longitude: lastPosition.longitude,
+      accuracy: lastPosition.accuracy,
+      altitude: lastPosition.altitude,
+      position_timestamp: lastPosition.timestamp ? new Date(lastPosition.timestamp).toISOString() : null,
+      user_id: currentUser ? currentUser.id : null,
+    };
+
+    if (!navigator.onLine) {
+      if (photo || video) throw new Error('Les photos et vidéos nécessitent une connexion internet pour être envoyées.');
+      mettreEnAttente(champs);
+      return { id: 'en-attente', horsLigne: true, ...champs };
+    }
+
+    try {
+      const formData = new FormData();
+      Object.entries(champs).forEach(([cle, valeur]) => {
+        if (valeur !== null && valeur !== undefined) formData.append(cle, valeur);
+      });
+      if (photo) formData.append('photo', photo);
+      if (video) formData.append('video', video);
+
+      const res = await fetch(`${API}/alertes`, { method: 'POST', body: formData });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.erreur || "Échec de l'envoi");
+      loadRecentAlerts();
+      return data;
+    } catch (err) {
+      // navigator.onLine ne reflète pas toujours la réalité ; une erreur
+      // réseau ici (TypeError) confirme une vraie coupure de connexion.
+      if (err instanceof TypeError) {
+        if (photo || video) throw new Error('Connexion perdue — réessaie sans pièce jointe ou une fois reconnecté.');
+        mettreEnAttente(champs);
+        return { id: 'en-attente', horsLigne: true, ...champs };
+      }
+      throw err;
+    }
   }
 
   /* ----- SOS (appui maintenu 3s) + suivi temps réel ----- */
@@ -398,10 +476,16 @@
       try {
         const alerte = await envoyerAlerte('sos', 'Alerte SOS');
         overlay.classList.add('done');
-        overlayTitle.textContent = 'Alerte transmise';
-        overlaySub.textContent = 'Les secours ont été notifiés. Votre position est suivie en temps réel.';
-        overlayCode.textContent = `Suivi #${alerte.id.slice(0, 8).toUpperCase()}`;
-        startSosWatch(alerte.id);
+        if (alerte.horsLigne) {
+          overlayTitle.textContent = 'Alerte enregistrée (hors connexion)';
+          overlaySub.textContent = "Aucun réseau détecté. Elle sera transmise automatiquement dès que la connexion revient.";
+          overlayCode.textContent = 'En attente d\'envoi';
+        } else {
+          overlayTitle.textContent = 'Alerte transmise';
+          overlaySub.textContent = 'Les secours ont été notifiés. Votre position est suivie en temps réel.';
+          overlayCode.textContent = `Suivi #${alerte.id.slice(0, 8).toUpperCase()}`;
+          startSosWatch(alerte.id);
+        }
       } catch (err) {
         overlay.classList.add('done');
         overlayTitle.textContent = "Échec de l'envoi";
@@ -428,7 +512,30 @@
     const sheetTitle = document.getElementById('sheetTitle');
     const sheetDesc = document.getElementById('sheetDesc');
     const sheetSend = document.getElementById('sheetSend');
+    const sheetPhotoInput = document.getElementById('sheetPhotoInput');
+    const sheetVideoInput = document.getElementById('sheetVideoInput');
+    const sheetPhotoLabel = document.getElementById('sheetPhotoLabel');
+    const sheetVideoLabel = document.getElementById('sheetVideoLabel');
     let currentType = null;
+
+    function resetMedia() {
+      sheetPhotoInput.value = '';
+      sheetVideoInput.value = '';
+      sheetPhotoLabel.textContent = 'Photo';
+      sheetVideoLabel.textContent = 'Vidéo';
+      sheetPhotoInput.closest('label').classList.remove('has-file');
+      sheetVideoInput.closest('label').classList.remove('has-file');
+    }
+    sheetPhotoInput.addEventListener('change', () => {
+      const has = sheetPhotoInput.files.length > 0;
+      sheetPhotoLabel.textContent = has ? 'Photo ajoutée ✓' : 'Photo';
+      sheetPhotoInput.closest('label').classList.toggle('has-file', has);
+    });
+    sheetVideoInput.addEventListener('change', () => {
+      const has = sheetVideoInput.files.length > 0;
+      sheetVideoLabel.textContent = has ? 'Vidéo ajoutée ✓' : 'Vidéo';
+      sheetVideoInput.closest('label').classList.toggle('has-file', has);
+    });
 
     document.querySelectorAll('.cat').forEach((el) => {
       el.addEventListener('click', () => {
@@ -439,6 +546,7 @@
         sheetIcon.style.background = icon.bg;
         sheetIcon.innerHTML = icon.svg;
         sheetDesc.value = '';
+        resetMedia();
         sheet.classList.add('open');
         sheetBackdrop.classList.add('open');
       });
@@ -451,9 +559,15 @@
     sheetSend.addEventListener('click', async () => {
       sheetSend.disabled = true;
       try {
-        const alerte = await envoyerAlerte(currentType, sheetDesc.value.trim() || null);
+        const photo = sheetPhotoInput.files[0] || null;
+        const video = sheetVideoInput.files[0] || null;
+        const alerte = await envoyerAlerte(currentType, sheetDesc.value.trim() || null, photo, video);
         closeSheet();
-        showToast(`Alerte envoyée — #${alerte.id.slice(0, 8).toUpperCase()}`);
+        if (alerte.horsLigne) {
+          showToast("Alerte enregistrée — sera envoyée dès le retour de la connexion.");
+        } else {
+          showToast(`Alerte envoyée — #${alerte.id.slice(0, 8).toUpperCase()}`);
+        }
       } catch (err) {
         showToast(`Échec de l'envoi : ${err.message || 'réessaie'}`);
       } finally {
@@ -473,7 +587,7 @@
     const sendVoiceBtn = document.getElementById('sendVoiceBtn');
 
     const SpeechRecognitionImpl = window.SpeechRecognition || window.webkitSpeechRecognition;
-    let mediaRecorder = null, mediaStream = null, recognition = null, recording = false, finalText = '';
+    let recognition = null, recording = false, finalText = '';
 
     function detectCategory(text) {
       const t = text.toLowerCase();
@@ -485,22 +599,17 @@
       return 'autre';
     }
 
-    async function startRecording() {
+    function startRecording() {
       if (!SpeechRecognitionImpl) {
         showToast("La saisie vocale n'est pas disponible sur ce navigateur. Utilise une catégorie ci-dessous.");
-        return;
-      }
-      try {
-        mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(mediaStream);
-        mediaRecorder.start();
-      } catch {
-        showToast('Microphone indisponible — vérifie les autorisations.');
         return;
       }
 
       finalText = '';
       transcript.classList.remove('show');
+      // SpeechRecognition gère elle-même l'accès au micro (pas besoin de
+      // getUserMedia ici) ; sur un site non-HTTPS, certains navigateurs la
+      // bloquent silencieusement — on le détecte via onerror ci-dessous.
       recognition = new SpeechRecognitionImpl();
       recognition.lang = 'fr-FR';
       recognition.continuous = true;
@@ -510,7 +619,18 @@
           if (e.results[i].isFinal) finalText += `${e.results[i][0].transcript} `;
         }
       };
-      recognition.onerror = () => { voiceSub.textContent = "Erreur d'écoute — réessaie"; };
+      recognition.onerror = (e) => {
+        recording = false;
+        voiceBtn.classList.remove('recording');
+        if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+          showToast("Micro refusé ou indisponible (le site doit être en HTTPS sur la plupart des téléphones).");
+        } else if (e.error === 'no-speech') {
+          showToast('Aucune parole détectée, réessaie.');
+        } else {
+          showToast("Erreur d'écoute — réessaie.");
+        }
+        voiceSub.textContent = "Parlez, on s'occupe du reste";
+      };
       recognition.start();
 
       recording = true;
@@ -520,8 +640,6 @@
 
     function stopRecording() {
       if (recognition) { recognition.stop(); recognition = null; }
-      if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-      if (mediaStream) { mediaStream.getTracks().forEach((t) => t.stop()); mediaStream = null; }
       if (!recording) return;
 
       recording = false;
@@ -546,7 +664,11 @@
       try {
         const alerte = await envoyerAlerte(toSlug(transcriptCat.value), transcriptText.textContent);
         transcript.classList.remove('show');
-        showToast(`Alerte envoyée — #${alerte.id.slice(0, 8).toUpperCase()}`);
+        if (alerte.horsLigne) {
+          showToast("Alerte enregistrée — sera envoyée dès le retour de la connexion.");
+        } else {
+          showToast(`Alerte envoyée — #${alerte.id.slice(0, 8).toUpperCase()}`);
+        }
       } catch (err) {
         showToast(`Échec de l'envoi : ${err.message || 'réessaie'}`);
       } finally {

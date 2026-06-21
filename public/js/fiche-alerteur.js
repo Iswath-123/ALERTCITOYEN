@@ -73,6 +73,12 @@ window.FicheAlerteur = (() => {
         ${alerte.adresse ? `<div><i class="fa-solid fa-map"></i> ${alerte.adresse}</div>` : ''}
         ${alerte.description ? `<div><i class="fa-solid fa-comment"></i> ${alerte.description}</div>` : ''}
       </div>
+      ${alerte.photo || alerte.video ? `
+        <div class="alerte-media-section">
+          ${alerte.photo ? `<a href="${alerte.photo}" target="_blank" rel="noopener"><img src="${alerte.photo}" alt="Photo jointe par l'alerteur" class="alerte-media-photo" /></a>` : ''}
+          ${alerte.video ? `<video src="${alerte.video}" controls class="alerte-media-video"></video>` : ''}
+        </div>
+      ` : ''}
     `;
   }
 

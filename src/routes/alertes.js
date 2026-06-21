@@ -1,9 +1,27 @@
 const express = require('express');
+const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
 const { randomUUID } = require('crypto');
 const db = require('../db/database');
 const { trouverUniteAssignee } = require('../utils/geo');
 
 const router = express.Router();
+
+// Pièces jointes (photo/vidéo) — multer ne traite que les requêtes
+// multipart/form-data ; les requêtes JSON existantes (SOS, catégories sans
+// pièce jointe) passent par ce même middleware sans être affectées.
+const DOSSIER_UPLOADS = path.join(__dirname, '../../public/uploads/alertes');
+fs.mkdirSync(DOSSIER_UPLOADS, { recursive: true });
+
+const stockage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, DOSSIER_UPLOADS),
+  filename: (req, file, cb) => cb(null, `${randomUUID()}${path.extname(file.originalname).toLowerCase()}`),
+});
+const uploadPiecesJointes = multer({
+  storage: stockage,
+  limits: { fileSize: 30 * 1024 * 1024 }, // 30 Mo par fichier (vidéo courte)
+}).fields([{ name: 'photo', maxCount: 1 }, { name: 'video', maxCount: 1 }]);
 
 const TYPES_PRIORITE_HAUTE = ['agression', 'incendie', 'accident', 'sos'];
 
@@ -152,28 +170,37 @@ router.get('/:id', (req, res) => {
   res.json(alerte);
 });
 
-router.post('/', (req, res) => {
+router.post('/', uploadPiecesJointes, (req, res) => {
   const { type, description, latitude, longitude, altitude, accuracy, position_timestamp, adresse, user_id } = req.body;
 
   if (!type) {
     return res.status(400).json({ erreur: 'Le champ "type" est requis' });
   }
 
+  // Les requêtes multipart (avec photo/vidéo) transmettent les champs texte
+  // en chaînes ; on les convertit explicitement pour les calculs géo (Turf).
+  const latitudeNum = latitude !== undefined && latitude !== '' ? Number(latitude) : null;
+  const longitudeNum = longitude !== undefined && longitude !== '' ? Number(longitude) : null;
+  const altitudeNum = altitude !== undefined && altitude !== '' ? Number(altitude) : null;
+  const accuracyNum = accuracy !== undefined && accuracy !== '' ? Number(accuracy) : null;
+
   const id = randomUUID();
   const priorite = calculerPriorite(type);
   const entiteAffectee = calculerEntiteAffectee(type);
-  const unitePoliceId = calculerUnitePolice(entiteAffectee, latitude, longitude);
+  const unitePoliceId = calculerUnitePolice(entiteAffectee, latitudeNum, longitudeNum);
+  const photo = req.files?.photo?.[0] ? `/uploads/alertes/${req.files.photo[0].filename}` : null;
+  const video = req.files?.video?.[0] ? `/uploads/alertes/${req.files.video[0].filename}` : null;
 
   db.prepare(`
     INSERT INTO alertes (
       id, type, description, latitude, longitude, altitude, accuracy, position_timestamp,
-      adresse, priorite, entite_affectee, unite_police_id, user_id
+      adresse, priorite, entite_affectee, unite_police_id, user_id, photo, video
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     id, type, description || null,
-    latitude ?? null, longitude ?? null, altitude ?? null, accuracy ?? null, position_timestamp ?? null,
-    adresse || null, priorite, entiteAffectee, unitePoliceId, user_id || null
+    latitudeNum, longitudeNum, altitudeNum, accuracyNum, position_timestamp || null,
+    adresse || null, priorite, entiteAffectee, unitePoliceId, user_id || null, photo, video
   );
 
   const alerte = db.prepare('SELECT * FROM alertes WHERE id = ?').get(id);
